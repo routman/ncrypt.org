@@ -1,0 +1,31 @@
+{
+  "name": "ncrypt",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "dependencies": {
+    "crypto-js": "^3.3.0",
+    "typeface-open-sans": "0.0.54"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "^3.4.1",
+    "node-sass": "^4.11.0",
+    "sass-loader": "^7.0.1",
+    "vue": "^2.6.8",
+    "vue-loader": "^15.7.0",
+    "vue-template-compiler": "^2.6.8"
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}
