@@ -10,7 +10,7 @@
     <textarea id="message" v-model="sot.message" @input="encrypt()" v-on:keyup="encrypt()" @change="encrypt()"></textarea>
 
     <label for="key" class="label">secret key (required)</label>
-    <input type="text" id="key" v-model="sot.key" @input="ncrypt()" v-on:keyup="ncrypt()" @change="encrypt()">
+    <input type="text" id="key" v-model="sot.key" @input="ncrypt()" v-on:keyup="ncrypt()" @change="ncrypt()">
 
     <label for="cipher" class="label">cipher</label>
     <div id="copy" class="label btn" @click="copy()"> {{ copytext }} </div>
@@ -76,7 +76,7 @@ export default {
 @import "assets/settings.scss";
 
 body {
-  margin: 20px 20px;
+  margin: 20px;
 }
 
 #app {

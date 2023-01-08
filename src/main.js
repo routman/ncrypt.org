@@ -15,7 +15,6 @@ var ncrypt = {
   encrypt: function() {
     if (ncrypt.message != ncrypt.xmessage || ncrypt.key != ncrypt.xkey) {
       ncrypt.last = 'encrypt';
-
       if (ncrypt.key != '') {
         ncrypt.xmessage = ncrypt.message;
         ncrypt.xkey = ncrypt.key;
