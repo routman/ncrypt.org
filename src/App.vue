@@ -7,14 +7,14 @@
 
     <label for="message" class="label">message</label>
     <div id="clear" class="label btn" @click="clear()">clear</div>
-    <textarea id="message" v-model="sot.message" v-on:keyup="encrypt()" @change="encrypt()"></textarea>
+    <textarea id="message" v-model="sot.message" @input="encrypt()" v-on:keyup="encrypt()" @change="encrypt()"></textarea>
 
     <label for="key" class="label">secret key (required)</label>
-    <input type="text" id="key" v-model="sot.key" v-on:keyup="ncrypt()" @change="encrypt()">
+    <input type="text" id="key" v-model="sot.key" @input="ncrypt()" v-on:keyup="ncrypt()" @change="encrypt()">
 
     <label for="cipher" class="label">cipher</label>
     <div id="copy" class="label btn" @click="copy()"> {{ copytext }} </div>
-    <textarea v-model.trim="sot.cipher" v-on:keyup="decrypt()" @change="decrypt()" id="cipher" ref="cipher"></textarea>
+    <textarea v-model.trim="sot.cipher" @input="decrypt()" v-on:keyup="decrypt()" @change="decrypt()" id="cipher" ref="cipher"></textarea>
 
     <about id="about"/>
 
