@@ -1,0 +1,9 @@
+node_modules
+dist
+*.local
+AGENTS.md
+.opencode/
+PHASES.md
+docs/api.md
+STATE.md
+.keys/
