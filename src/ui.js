@@ -29,6 +29,7 @@ export function mountTopicScreen({ onJoin }) {
   topicField.className = 'field'
   const topicInput = document.createElement('input')
   topicInput.type = 'text'
+  topicInput.autocapitalize = 'off'
   topicInput.maxLength = 100
   topicInput.placeholder = 'topic'
   topicField.append(topicInput)
@@ -36,6 +37,7 @@ export function mountTopicScreen({ onJoin }) {
   const nickField = document.createElement('div')
   nickField.className = 'field'
   const nickInput = document.createElement('input')
+  nickInput.autocapitalize = 'off'
   nickInput.maxLength = 20
   nickInput.placeholder = 'nickname'
   nickInput.value = localStorage.getItem(NICK_KEY) || ''
@@ -130,7 +132,7 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
 
   chat.append(header, messages, composer)
   app.append(chat)
-  input.focus()
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
 
   return {
     append(msg) {
