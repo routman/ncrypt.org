@@ -289,7 +289,7 @@ export function createService(options = {}) {
     db.close();
   }
 
-  return { app, storeMessage, close, limits, db, stats };
+  return { app, storeMessage, close, limits, db, stats, sweep: (now) => sweepStorage(now) };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

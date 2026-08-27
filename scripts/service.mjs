@@ -162,3 +162,39 @@ test('admin: audit records actions', async () => {
     assert.ok(body.entries.some((e) => e.action === 'block'));
   });
 });
+
+test('global cap: sweep prunes oldest rows down to globalRows', async () => {
+  await withService({ limits: { perTopic: 100000, globalRows: 10, ttlDays: 30, burst: 100000 } }, async (svc) => {
+    const idA = 'a'.repeat(64);
+    const idB = 'b'.repeat(64);
+    const now = Date.now();
+    for (let i = 0; i < 8; i++) {
+      svc.storeMessage(idA, 'a' + i, now - 16000 + i * 1000);
+    }
+    for (let i = 0; i < 7; i++) {
+      svc.storeMessage(idB, 'b' + i, now - 8000 + i * 1000);
+    }
+    svc.sweep(now);
+    const total = svc.db.prepare('SELECT COUNT(*) AS n FROM messages').get().n;
+    assert.equal(total, 10);
+    const countA = svc.db.prepare('SELECT COUNT(*) AS n FROM messages WHERE topic_id = ?').get(idA).n;
+    const countB = svc.db.prepare('SELECT COUNT(*) AS n FROM messages WHERE topic_id = ?').get(idB).n;
+    assert.equal(countA, 3);
+    assert.equal(countB, 7);
+  });
+});
+
+test('ttl: sweep prunes rows older than ttlDays', async () => {
+  await withService({ limits: { perTopic: 100000, globalRows: 100000, ttlDays: 30, burst: 100000 } }, async (svc) => {
+    const old = 'c'.repeat(64);
+    const recent = 'd'.repeat(64);
+    const now = Date.now();
+    svc.storeMessage(old, 'old', now - 31 * 86400000);
+    svc.storeMessage(recent, 'recent', now - 86400000);
+    svc.sweep(now);
+    const oldRows = svc.db.prepare('SELECT COUNT(*) AS n FROM messages WHERE topic_id = ?').get(old).n;
+    const recentRows = svc.db.prepare('SELECT COUNT(*) AS n FROM messages WHERE topic_id = ?').get(recent).n;
+    assert.equal(oldRows, 0);
+    assert.equal(recentRows, 1);
+  });
+});

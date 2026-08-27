@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="stylesheet" href="admin.css">
+    <title>ncrypt.org admin</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="page admin">
+        <div>
+          <div class="logo accent">ncrypt</div><div class="logo">admin</div>
+        </div>
+        <br>
+        <div id="admin-error"></div>
+
+        <div class="card">
+          <h2>status</h2>
+          <div class="card-sub">live · refreshed every 5 s · <div class="link" id="admin-stats-btn">refresh</div></div>
+          <div class="statgrid">
+            <div class="stat">
+              <div class="stat-label">messages / 60s</div>
+              <div class="stat-value" id="admin-messages60s">-</div>
+              <div class="stat-hint">accepted in the last minute</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">messages today</div>
+              <div class="stat-value" id="admin-messages-today">-</div>
+              <div class="stat-hint">accepted since UTC midnight</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">active topics</div>
+              <div class="stat-value" id="admin-topics">-</div>
+              <div class="stat-hint">distinct topics in the store</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">connections</div>
+              <div class="stat-value" id="admin-connections">-</div>
+              <div class="stat-hint">mqtt clients on the broker</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">storage</div>
+              <div class="stat-value" id="admin-storage">-</div>
+              <div class="stat-hint">rows stored · cap 50000</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">dropped</div>
+              <div class="stat-value" id="admin-dropped">-</div>
+              <div class="stat-hint">rate-limited drops · total since start</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>limits</h2>
+          <div class="card-sub">write caps · hot-reload, no restart</div>
+          <div class="limitgrid">
+            <label class="limitfield">
+              <span class="limit-label">rate ms</span>
+              <input id="admin-limit-rate" placeholder="2000">
+              <span class="limit-hint">min ms between messages per topic</span>
+            </label>
+            <label class="limitfield">
+              <span class="limit-label">burst</span>
+              <input id="admin-limit-burst" placeholder="5">
+              <span class="limit-hint">max queued messages per topic</span>
+            </label>
+            <label class="limitfield">
+              <span class="limit-label">per-topic cap</span>
+              <input id="admin-limit-topic" placeholder="100">
+              <span class="limit-hint">max stored messages per topic</span>
+            </label>
+            <label class="limitfield">
+              <span class="limit-label">global rows</span>
+              <input id="admin-limit-rows" placeholder="50000">
+              <span class="limit-hint">max rows across all topics</span>
+            </label>
+            <label class="limitfield">
+              <span class="limit-label">ttl days</span>
+              <input id="admin-limit-ttl" placeholder="30">
+              <span class="limit-hint">messages older than this are pruned</span>
+            </label>
+          </div>
+          <div class="adminrow"><div class="link" id="admin-limits-btn">apply</div></div>
+          <span id="admin-limits-result" class="action-result"></span>
+        </div>
+
+        <div class="card">
+          <h2>blocklist</h2>
+          <div class="card-sub">blocked mqtt client ids · <span id="admin-blocked-count">-</span> blocked</div>
+          <div class="adminrow">
+            <input id="admin-block-client" class="wide" placeholder="client id">
+            <div class="link" id="admin-block-btn">block</div>
+            <div class="link" id="admin-unblock-btn">unblock</div>
+          </div>
+          <div class="field-hint">block / unblock an mqtt client id</div>
+          <span id="admin-block-result" class="action-result"></span>
+        </div>
+
+        <div class="card">
+          <h2>purge</h2>
+          <div class="card-sub">delete every message of one topic</div>
+          <div class="adminrow">
+            <input id="admin-purge-input" class="wide" placeholder="topic id (64 hex)">
+            <div class="link" id="admin-purge-btn">purge</div>
+          </div>
+          <span id="admin-purge-result" class="action-result"></span>
+          <div class="field-hint">the 64-hex room id · sha-256 of "ncrypt-chat:" + topic</div>
+        </div>
+
+        <div class="card">
+          <h2>audit</h2>
+          <div class="card-sub">recent admin events</div>
+          <div class="adminrow"><div class="link" id="admin-audit-btn">refresh audit</div></div>
+          <div id="admin-audit"></div>
+        </div>
+      </div>
+    </div>
+    <script src="admin.js"></script>
+  </body>
+</html>

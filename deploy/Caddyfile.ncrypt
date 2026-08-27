@@ -40,9 +40,9 @@ ncrypt.org {
 	}
 
 	# Admin page (static asset): same CIDR gate.
-	handle /admin {
+	handle_path /admin* {
 		respond @adminDeny "forbidden" 403
-		root /opt/ncrypt/web
+		root /opt/ncrypt/web/admin
 		try_files {path} /index.html
 		file_server
 	}
