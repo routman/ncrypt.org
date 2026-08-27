@@ -25,6 +25,7 @@ mountTopicScreen({
     let key = null
     let mqtTopic = null
     let client = null
+    const sent = []
 
     const chat = mountChatView({
       nick,
@@ -34,6 +35,8 @@ mountTopicScreen({
         if (!canSend()) return false
         const ts = Date.now()
         chat.append({ nick, text, ts })
+        sent.push({ ts, text })
+        if (sent.length > 50) sent.shift()
         encryptMsg(key, { nick, text, ts }).then((b64) => {
           if (client) client.publish(mqtTopic, b64)
         })
@@ -58,7 +61,16 @@ mountTopicScreen({
         url: mqttUrl(),
         topic: mqtTopic,
         onMessage(t, payload) {
-          decryptMsg(key, payload).then(chat.append).catch(() => {})
+          decryptMsg(key, payload).then((m) => {
+            const i = sent.findIndex(
+              (s) => s.ts === m.ts && s.text === m.text && m.nick === nick,
+            )
+            if (i !== -1) {
+              sent.splice(i, 1)
+              return
+            }
+            chat.append(m)
+          }).catch(() => {})
         },
         onStatus(connected) {
           chat.setConnected(connected)
