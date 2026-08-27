@@ -1,5 +1,17 @@
 const NICK_KEY = 'ncrypt-nick'
 
+function makeLogo() {
+  const logo = document.createElement('div')
+  logo.className = 'logo'
+  const n = document.createElement('span')
+  n.className = 'n'
+  n.textContent = 'n'
+  const rest = document.createElement('span')
+  rest.textContent = 'crypt'
+  logo.append(n, rest)
+  return logo
+}
+
 function fmtTime(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
@@ -11,23 +23,15 @@ export function mountTopicScreen({ onJoin }) {
   const screen = document.createElement('div')
   screen.className = 'screen'
 
-  const h1 = document.createElement('h1')
-  h1.textContent = 'ncrypt.org'
+  const logo = makeLogo()
 
   const topicField = document.createElement('div')
   topicField.className = 'field'
   const topicInput = document.createElement('input')
-  topicInput.type = 'password'
+  topicInput.type = 'text'
   topicInput.maxLength = 100
   topicInput.placeholder = 'topic'
-  const eye = document.createElement('div')
-  eye.className = 'eye'
-  eye.addEventListener('click', () => {
-    const show = topicInput.type === 'password'
-    topicInput.type = show ? 'text' : 'password'
-    eye.classList.toggle('closed', show)
-  })
-  topicField.append(topicInput, eye)
+  topicField.append(topicInput)
 
   const nickField = document.createElement('div')
   nickField.className = 'field'
@@ -61,7 +65,7 @@ export function mountTopicScreen({ onJoin }) {
     if (e.key === 'Enter') join.click()
   })
 
-  screen.append(h1, topicField, nickField, error, join)
+  screen.append(logo, topicField, nickField, error, join)
   app.append(screen)
   topicInput.focus()
 }
@@ -75,12 +79,13 @@ export function mountChatView({ nick, onSend }) {
 
   const header = document.createElement('div')
   header.className = 'chatheader'
+  const logo = makeLogo()
   const nickLabel = document.createElement('span')
   nickLabel.className = 'nick'
   nickLabel.textContent = nick
   const dot = document.createElement('span')
   dot.className = 'dot'
-  header.append(nickLabel, dot)
+  header.append(logo, nickLabel, dot)
 
   const note = document.createElement('div')
   note.className = 'note'

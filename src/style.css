@@ -86,16 +86,32 @@ input::selection {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  align-self: center;
+  width: 100%;
+  max-width: 400px;
   padding: 16px;
   overflow-y: auto;
   box-sizing: border-box;
 }
 
-h1 {
+.logo {
   font-size: 17px;
   font-weight: 300;
   color: var(--color-heading);
   margin: 16px;
+  user-select: none;
+}
+
+.logo .n {
+  color: #ef3939;
+}
+
+.chatheader .logo {
+  margin: 0;
+}
+
+.chatheader .nick {
+  margin-left: auto;
 }
 
 .field {
@@ -118,7 +134,7 @@ input {
   border-bottom: 1px solid var(--color-primary);
   border-width: 0 0 1px 0;
   border-image: linear-gradient(to right, var(--color-primary) 0%, var(--color-accent) 100%) 1;
-  padding: 1px 40px 0 0;
+  padding: 1px 0 0 0;
   margin: 0;
 }
 
@@ -131,43 +147,6 @@ input:focus {
 
 ::placeholder {
   color: #999999;
-}
-
-.eye {
-  cursor: pointer;
-  color: var(--color-primary);
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 16px;
-  height: 16px;
-  border-radius: 77% 16%;
-  border: solid 2px currentColor;
-  transform: rotate(45deg);
-  user-select: none;
-}
-
-.eye:before {
-  content: '';
-  position: absolute;
-  left: 3px;
-  top: 3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  border: solid 2px var(--color-primary);
-}
-
-.eye.closed:after {
-  content: '';
-  position: absolute;
-  left: -3px;
-  top: 7px;
-  width: 24px;
-  border: solid 2px currentColor;
-  border-width: 2px 0 0 0;
-  box-shadow: 0px 2px var(--color-accent);
-  transform: rotate(90deg);
 }
 
 button {
