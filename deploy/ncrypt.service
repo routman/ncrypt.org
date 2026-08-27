@@ -1,0 +1,28 @@
+[Unit]
+Description=ncrypt history service (Node + node:sqlite + express)
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+
+[Service]
+User=ncrypt
+Group=ncrypt
+WorkingDirectory=/opt/ncrypt
+Environment=HOME=/opt/ncrypt
+Environment=PORT=3002
+Environment=HOST=127.0.0.1
+Environment=DB_PATH=/opt/ncrypt/ncrypt.db
+Environment=LIMITS_FILE=/opt/ncrypt/limits.json
+Environment=MQTT_URL=ws://127.0.0.1:9001
+# The admin gate re-checks the client IP at the app layer; behind Caddy the
+# real client IP arrives via X-Forwarded-For and is trusted only when set.
+Environment=TRUST_PROXY=1
+ExecStart=/usr/bin/node /opt/ncrypt/server.js
+Restart=on-failure
+RestartSec=2
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

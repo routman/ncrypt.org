@@ -1,0 +1,61 @@
+# ncrypt.org — Caddy site config (deploy/Caddyfile.ncrypt).
+# - Automatic HTTPS: Caddy obtains a Let's Encrypt cert for ncrypt.org and
+#   redirects HTTP -> HTTPS. Requires the apex A record to point at this box
+#   and inbound 80/443 open.
+# - /mqtt  -> Mosquitto websockets on loopback (127.0.0.1:9001).
+# - /api/* -> Node history service on loopback (127.0.0.1:3002).
+# - everything else -> the built frontend under /opt/ncrypt/web.
+#
+# Append the ncrypt.org block to /etc/caddy/Caddyfile (the publicnote.com
+# block stays untouched).
+
+ncrypt.org {
+	encode gzip
+
+	# Hide the server token, add hardening headers on every response.
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Strict-Transport-Security "max-age=31536000"
+		X-Frame-Options DENY
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+	}
+
+	# Admin tooling: CIDR-gated at the edge AND by the backend.
+	# Only loopback, RFC1918 and Tailscale-CGNAT source IPs may reach it;
+	# everything else gets a flat 403 before proxying.
+	@adminDeny not remote_ip 127.0.0.1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10
+
+	# MQTT broker (websockets) -> Mosquitto on loopback.
+	handle /mqtt {
+		reverse_proxy 127.0.0.1:9001
+	}
+
+	# Admin API: 403 for non-allowlisted source IPs, otherwise proxy.
+	handle /api/admin/* {
+		respond @adminDeny "forbidden" 403
+		reverse_proxy 127.0.0.1:3002
+	}
+
+	# Admin page (static asset): same CIDR gate.
+	handle /admin {
+		respond @adminDeny "forbidden" 403
+		root /opt/ncrypt/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	# API -> Node history service (127.0.0.1:3002).
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3002
+	}
+
+	# Static frontend.
+	handle {
+		root /opt/ncrypt/web
+		try_files {path} /index.html
+		file_server
+	}
+}
