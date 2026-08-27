@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>ncrypt | About</title>
+    <meta name="description" content="ncrypt is an end-to-end encrypted chat room. The topic is the secret: your browser derives the encryption key from it, and the server only ever sees a one-way hash plus ciphertext.">
+
+    <style>
+      @font-face {
+        font-family: "IBM Plex Mono";
+        font-style: normal;
+        font-weight: 300;
+        font-display: swap;
+        src: url("/fonts/ibm-plex-mono-300-latin.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "IBM Plex Mono";
+        font-style: normal;
+        font-weight: 300;
+        font-display: swap;
+        src: url("/fonts/ibm-plex-mono-300-latin-ext.woff2") format("woff2");
+        unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C00-2C2F, U+A000-A9FF;
+      }
+      :root {
+        --color-text: #e6e6e6;
+        --color-bg: #332f33;
+        --color-heading: #e6e6e6;
+        --color-primary: #88ddff;
+        --color-accent: #ff77ff;
+        --color-link: #88ddff;
+      }
+      html, body {
+        font-family: "IBM Plex Mono", serif;
+        font-weight: 300;
+        color: var(--color-text);
+        background: var(--color-bg);
+        margin: 0;
+        padding: 24px 16px;
+        line-height: 1.6;
+      }
+      .logo {
+        display: inline-block;
+        font-size: 24px;
+        letter-spacing: 7px;
+        color: var(--color-heading);
+        user-select: none;
+      }
+      .logo .n {
+        color: var(--color-accent);
+      }
+      h1 {
+        font-size: 20px;
+        font-weight: normal;
+        color: var(--color-heading);
+        padding: 16px 0;
+      }
+      p {
+        margin: 0 0 16px 0;
+      }
+      .link {
+        color: var(--color-link);
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo"><span class="n">n</span>crypt</div>
+    <h1>About</h1>
+    <p>ncrypt is an end-to-end encrypted chat room. There is no account, no sign-up, and no server-side reading of your messages.</p>
+    <p>The topic is the secret. Your browser derives the AES-256 key from the topic, and every message is encrypted before it leaves your device. The server only ever sees a one-way SHA-256 hash of the topic (the room id) and the ciphertext — it cannot read the messages, and it cannot recover the topic.</p>
+    <p>Because the topic is the key, anyone who knows the topic can join the room and read its history. Choose a long, complex topic for rooms you want to keep private. Each room keeps the last 100 messages, so a reload catches you up.</p>
+    <p><a class="link" href="/">home</a></p>
+  </body>
+</html>

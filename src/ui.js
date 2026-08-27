@@ -65,12 +65,25 @@ export function mountTopicScreen({ onJoin }) {
     if (e.key === 'Enter') join.click()
   })
 
-  screen.append(logo, topicField, nickField, error, join)
+  const links = document.createElement('p')
+  links.className = 'links'
+  const about = document.createElement('a')
+  about.href = '/about.html'
+  about.textContent = 'about'
+  const terms = document.createElement('a')
+  terms.href = '/terms.html'
+  terms.textContent = 'terms'
+  const priv = document.createElement('a')
+  priv.href = '/privacy.html'
+  priv.textContent = 'privacy'
+  links.append(about, document.createTextNode(' · '), terms, document.createTextNode(' · '), priv)
+
+  screen.append(logo, topicField, nickField, error, join, links)
   app.append(screen)
   topicInput.focus()
 }
 
-export function mountChatView({ nick, onSend }) {
+export function mountChatView({ nick, topic, onHome, onSend }) {
   const app = document.getElementById('app')
   app.textContent = ''
 
@@ -80,16 +93,17 @@ export function mountChatView({ nick, onSend }) {
   const header = document.createElement('div')
   header.className = 'chatheader'
   const logo = makeLogo()
+  logo.title = 'home'
+  logo.addEventListener('click', onHome)
+  const topicLabel = document.createElement('span')
+  topicLabel.className = 'topic'
+  topicLabel.textContent = 'topic: ' + topic
   const nickLabel = document.createElement('span')
   nickLabel.className = 'nick'
   nickLabel.textContent = nick
   const dot = document.createElement('span')
   dot.className = 'dot'
-  header.append(logo, nickLabel, dot)
-
-  const note = document.createElement('div')
-  note.className = 'note'
-  note.textContent = 'last 100 messages'
+  header.append(logo, topicLabel, nickLabel, dot)
 
   const messages = document.createElement('div')
   messages.className = 'messages'
@@ -114,7 +128,7 @@ export function mountChatView({ nick, onSend }) {
   send.addEventListener('click', doSend)
   composer.append(input, send)
 
-  chat.append(header, note, messages, composer)
+  chat.append(header, messages, composer)
   app.append(chat)
   input.focus()
 
@@ -122,16 +136,19 @@ export function mountChatView({ nick, onSend }) {
     append(msg) {
       const m = document.createElement('div')
       m.className = 'msg' + (msg.nick === nick ? ' own' : '')
+      const head = document.createElement('div')
+      head.className = 'head'
       const n = document.createElement('span')
       n.className = 'nick'
       n.textContent = msg.nick
       const t = document.createElement('span')
       t.className = 'time'
       t.textContent = fmtTime(msg.ts)
+      head.append(n, t)
       const body = document.createElement('span')
       body.className = 'text'
       body.textContent = msg.text
-      m.append(n, t, body)
+      m.append(head, body)
       messages.append(m)
       messages.scrollTop = messages.scrollHeight
     },
