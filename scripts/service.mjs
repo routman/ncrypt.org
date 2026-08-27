@@ -1,0 +1,164 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createService } from '../backend/server.js';
+
+async function withService(options, fn) {
+  const svc = createService(options || {});
+  const server = svc.app.listen(0);
+  await new Promise((resolve) => server.on('listening', resolve));
+  const base = 'http://127.0.0.1:' + server.address().port;
+  try {
+    await fn(svc, base);
+  } finally {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+    svc.close();
+  }
+}
+
+const ADMIN = { 'content-type': 'application/json' };
+
+test('history cap: keeps last 100 per topic', async () => {
+  await withService({ limits: { burst: 100000, perTopic: 100 } }, async (svc, base) => {
+    const id = 'a'.repeat(64);
+    for (let i = 0; i < 150; i++) {
+      svc.storeMessage(id, 'ct' + i, 1000000 + i);
+    }
+    const res = await fetch(base + '/api/history/' + id);
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.messages.length, 100);
+    assert.equal(body.messages[0].ct, 'ct50');
+    assert.equal(body.messages[99].ct, 'ct149');
+  });
+});
+
+test('rate limit: drops writes past burst within the window', async () => {
+  await withService({ limits: { rateMs: 2000, burst: 5, perTopic: 100 } }, async (svc, base) => {
+    const id = 'b'.repeat(64);
+    const results = [];
+    for (let i = 0; i < 6; i++) {
+      results.push(svc.storeMessage(id, 'ct' + i, 2000000 + i));
+    }
+    assert.equal(results[0].stored, true);
+    assert.equal(results[4].stored, true);
+    assert.equal(results[5].stored, false);
+    assert.equal(results[5].reason, 'rate');
+    const body = await (await fetch(base + '/api/history/' + id)).json();
+    assert.equal(body.messages.length, 5);
+  });
+});
+
+test('history shape: oldest first with ct + ts', async () => {
+  await withService({ limits: { burst: 100000 } }, async (svc, base) => {
+    const id = 'c'.repeat(64);
+    svc.storeMessage(id, 'first', 100);
+    svc.storeMessage(id, 'second', 200);
+    svc.storeMessage(id, 'third', 300);
+    const res = await fetch(base + '/api/history/' + id + '?limit=100');
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.deepEqual(body.messages, [
+      { ct: 'first', ts: 100 },
+      { ct: 'second', ts: 200 },
+      { ct: 'third', ts: 300 }
+    ]);
+  });
+});
+
+test('history: unknown id → 200 empty', async () => {
+  await withService({}, async (svc, base) => {
+    const res = await fetch(base + '/api/history/' + 'e'.repeat(64));
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.deepEqual(body, { messages: [] });
+  });
+});
+
+test('history: bad id → 400', async () => {
+  await withService({}, async (svc, base) => {
+    assert.equal((await fetch(base + '/api/history/notahex')).status, 400);
+    assert.equal((await fetch(base + '/api/history/' + 'a'.repeat(63))).status, 400);
+  });
+});
+
+test('history: bad limit → 400', async () => {
+  await withService({}, async (svc, base) => {
+    const id = 'd'.repeat(64);
+    assert.equal((await fetch(base + '/api/history/' + id + '?limit=0')).status, 400);
+    assert.equal((await fetch(base + '/api/history/' + id + '?limit=101')).status, 400);
+    assert.equal((await fetch(base + '/api/history/' + id + '?limit=abc')).status, 400);
+  });
+});
+
+test('admin: disallowed source IP → 403', async () => {
+  await withService({ trustProxy: true }, async (svc, base) => {
+    const res = await fetch(base + '/api/admin/stats', {
+      method: 'POST',
+      headers: { ...ADMIN, 'x-forwarded-for': '8.8.8.8' },
+      body: '{}'
+    });
+    assert.equal(res.status, 403);
+  });
+});
+
+test('admin: allowed source IP → 200 stats', async () => {
+  await withService({ trustProxy: true }, async (svc, base) => {
+    const res = await fetch(base + '/api/admin/stats', {
+      method: 'POST',
+      headers: { ...ADMIN, 'x-forwarded-for': '127.0.0.1' },
+      body: '{}'
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(typeof body.messages60s, 'number');
+    assert.equal(typeof body.storageRows, 'number');
+    assert.equal(typeof body.droppedTotal, 'number');
+  });
+});
+
+test('admin: limits reflects current config', async () => {
+  await withService({ trustProxy: true, limits: { rateMs: 3000, burst: 7 } }, async (svc, base) => {
+    const res = await fetch(base + '/api/admin/limits', {
+      method: 'POST',
+      headers: { ...ADMIN, 'x-forwarded-for': '127.0.0.1' },
+      body: '{}'
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.rateMs, 3000);
+    assert.equal(body.burst, 7);
+  });
+});
+
+test('admin: purge deletes a topic', async () => {
+  await withService({ trustProxy: true, limits: { burst: 100000 } }, async (svc, base) => {
+    const id = 'f'.repeat(64);
+    svc.storeMessage(id, 'x', 100);
+    svc.storeMessage(id, 'y', 200);
+    const res = await fetch(base + '/api/admin/purge', {
+      method: 'POST',
+      headers: { ...ADMIN, 'x-forwarded-for': '127.0.0.1' },
+      body: JSON.stringify({ id })
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.deleted, 2);
+    assert.deepEqual((await (await fetch(base + '/api/history/' + id)).json()), { messages: [] });
+  });
+});
+
+test('admin: audit records actions', async () => {
+  await withService({ trustProxy: true }, async (svc, base) => {
+    const headers = { ...ADMIN, 'x-forwarded-for': '127.0.0.1' };
+    await fetch(base + '/api/admin/block', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ clientId: 'abc' })
+    });
+    const res = await fetch(base + '/api/admin/audit', { method: 'POST', headers, body: '{}' });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.ok(body.entries.some((e) => e.action === 'block'));
+  });
+});
