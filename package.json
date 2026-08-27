@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "vite": "^6.0.0"
+  },
+  "dependencies": {
+    "mqtt": "^5.15.2"
   }
 }
