@@ -108,7 +108,7 @@ input::selection {
 }
 
 .tagline {
-  margin: 0 16px 16px 16px;
+  margin: 0 16px 32px;
   font-size: 14px;
   color: #999999;
 }
@@ -278,7 +278,7 @@ button:hover {
 }
 
 .links {
-  margin: 16px 16px 0 16px;
+  margin: 32px 16px 0;
   font-size: 17px;
 }
 
