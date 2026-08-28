@@ -107,6 +107,12 @@ input::selection {
   color: var(--color-accent);
 }
 
+.tagline {
+  margin: 0 16px;
+  font-size: 14px;
+  color: #999999;
+}
+
 .chatheader .logo {
   margin: 0;
   cursor: pointer;
@@ -273,7 +279,7 @@ button:hover {
 
 .links {
   margin: 0 16px;
-  font-size: 13px;
+  font-size: 17px;
 }
 
 .links a {
@@ -283,4 +289,14 @@ button:hover {
 
 .links a:hover {
   text-decoration: underline;
+}
+
+@media (min-width: 720px) {
+  .screen {
+    max-width: 480px;
+  }
+
+  .screen-inner {
+    margin: auto;
+  }
 }

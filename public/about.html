@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <title>ncrypt | About</title>
-    <meta name="description" content="ncrypt is an end-to-end encrypted chat room. The topic is the secret: your browser derives the encryption key from it, and the server only ever sees a one-way hash plus ciphertext.">
+    <meta name="description" content="ncrypt is an end-to-end encrypted chat room. The channel is the secret: your browser derives the encryption key from it, and the server only ever sees a one-way hash plus ciphertext.">
 
     <style>
       @font-face {
@@ -71,8 +71,8 @@
     <div class="logo"><span class="n">n</span>crypt</div>
     <h1>About</h1>
     <p>ncrypt is an end-to-end encrypted chat room. There is no account, no sign-up, and no server-side reading of your messages.</p>
-    <p>The topic is the secret. Your browser derives the AES-256 key from the topic, and every message is encrypted before it leaves your device. The server only ever sees a one-way SHA-256 hash of the topic (the room id) and the ciphertext — it cannot read the messages, and it cannot recover the topic.</p>
-    <p>Because the topic is the key, anyone who knows the topic can join the room and read its history. Choose a long, complex topic for rooms you want to keep private. Each room keeps the last 100 messages, so a reload catches you up.</p>
+    <p>The channel is the secret. Your browser derives the AES-256 key from the channel, and every message is encrypted before it leaves your device. The server only ever sees a one-way SHA-256 hash of the channel (the room id) and the ciphertext — it cannot read the messages, and it cannot recover the channel.</p>
+    <p>There is no list of channels — any word you type is a channel. Because the channel is the key, anyone who knows it can join the room and read its history. Choose a long, complex channel for rooms you want to keep private. Each room keeps the last 100 messages, so a reload catches you up.</p>
     <p><a class="link" href="/">home</a></p>
   </body>
 </html>

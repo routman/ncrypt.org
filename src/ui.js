@@ -25,13 +25,17 @@ export function mountTopicScreen({ onJoin }) {
 
   const logo = makeLogo()
 
+  const tagline = document.createElement('div')
+  tagline.className = 'tagline'
+  tagline.textContent = 'encrypted chat rooms'
+
   const topicField = document.createElement('div')
   topicField.className = 'field'
   const topicInput = document.createElement('input')
   topicInput.type = 'text'
   topicInput.autocapitalize = 'off'
   topicInput.maxLength = 100
-  topicInput.placeholder = 'topic'
+  topicInput.placeholder = 'channel'
   topicField.append(topicInput)
 
   const nickField = document.createElement('div')
@@ -47,12 +51,12 @@ export function mountTopicScreen({ onJoin }) {
   error.className = 'error'
 
   const join = document.createElement('button')
-  join.textContent = 'join'
+  join.textContent = 'connect'
   join.addEventListener('click', () => {
     const topic = topicInput.value.trim()
     const nick = nickInput.value.trim()
     if (topic.length < 1 || topic.length > 100) {
-      error.textContent = 'topic must be 1-100 characters'
+      error.textContent = 'channel must be 1-100 characters'
       return
     }
     if (nick.length < 1 || nick.length > 20) {
@@ -80,7 +84,10 @@ export function mountTopicScreen({ onJoin }) {
   priv.textContent = 'privacy'
   links.append(about, document.createTextNode(' · '), terms, document.createTextNode(' · '), priv)
 
-  screen.append(logo, topicField, nickField, error, join, links)
+  const inner = document.createElement('div')
+  inner.className = 'screen-inner'
+  inner.append(logo, tagline, topicField, nickField, error, join, links)
+  screen.append(inner)
   app.append(screen)
   topicInput.focus()
 }
@@ -99,7 +106,7 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
   logo.addEventListener('click', onHome)
   const topicLabel = document.createElement('span')
   topicLabel.className = 'topic'
-  topicLabel.textContent = 'topic: ' + topic
+  topicLabel.textContent = 'channel: ' + topic
   const nickLabel = document.createElement('span')
   nickLabel.className = 'nick'
   nickLabel.textContent = nick
