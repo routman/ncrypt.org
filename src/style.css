@@ -108,7 +108,7 @@ input::selection {
 }
 
 .tagline {
-  margin: 0 16px;
+  margin: 0 16px 16px 16px;
   font-size: 14px;
   color: #999999;
 }
@@ -171,9 +171,9 @@ button {
   color: var(--color-primary);
   background: transparent;
   border: 1px solid var(--color-primary);
-  border-radius: 0;
+  border-radius: 4px;
   padding: 8px 24px;
-  margin: 16px;
+  margin: 8px 16px 16px 16px;
   cursor: pointer;
 }
 
@@ -278,7 +278,7 @@ button:hover {
 }
 
 .links {
-  margin: 0 16px;
+  margin: 16px 16px 0 16px;
   font-size: 17px;
 }
 
