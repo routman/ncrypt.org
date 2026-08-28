@@ -306,7 +306,7 @@ button:hover {
 }
 
 .links {
-  margin: 32px 16px 0;
+  margin: 32px 16px 64px;
   font-size: 17px;
 }
 
