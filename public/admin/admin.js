@@ -20,13 +20,24 @@ function stop() {
   showError('admin api http 403 (this host is not on an allowed network)');
 }
 
+// The admin page is served from two places:
+//   - ncrypt.org/admin        -> API at /api/admin/
+//   - <tailscale>/ncrypt-admin -> API at /ncrypt-admin/api/admin/
+// Detect which deployment we're on from the page's own URL and use the
+// matching API base, so the same static page works in both.
+function apiBase() {
+  return location.pathname.indexOf('/ncrypt-admin') === 0
+    ? '/ncrypt-admin/api/admin/'
+    : '/api/admin/';
+}
+
 async function adminPost(path, body) {
   if (stopped) {
     return { ok: false, status: 403, data: null };
   }
   let res;
   try {
-    res = await fetch('/api/admin/' + path, {
+    res = await fetch(apiBase() + path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body || {})
