@@ -112,7 +112,10 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
   nickLabel.textContent = nick
   const dot = document.createElement('span')
   dot.className = 'dot'
-  header.append(logo, topicLabel, nickLabel, dot)
+  const nickwrap = document.createElement('span')
+  nickwrap.className = 'nickwrap'
+  nickwrap.append(nickLabel, dot)
+  header.append(logo, topicLabel, nickwrap)
 
   const messages = document.createElement('div')
   messages.className = 'messages'

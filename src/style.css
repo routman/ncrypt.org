@@ -131,12 +131,11 @@ input::selection {
   white-space: nowrap;
 }
 
-.chatheader .nick {
+.chatheader .nickwrap {
   order: 2;
-}
-
-.chatheader .dot {
-  order: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 @media (max-width: 480px) {
@@ -145,11 +144,8 @@ input::selection {
     flex: 0 0 100%;
     text-align: left;
   }
-  .chatheader .nick {
+  .chatheader .nickwrap {
     order: 1;
-  }
-  .chatheader .dot {
-    order: 2;
   }
 }
 
