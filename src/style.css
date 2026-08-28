@@ -292,5 +292,5 @@ button:hover {
 }
 
 .screen-inner {
-  margin: auto;
+  margin: auto 0;
 }
