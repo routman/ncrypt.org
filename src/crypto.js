@@ -21,6 +21,17 @@ function b64ToBytes(b64) {
   return out
 }
 
+function toBase36(bytes) {
+  let n = 0n
+  for (const b of bytes) n = (n << 8n) | BigInt(b)
+  let s = ''
+  while (n > 0n) {
+    s = (n % 36n).toString(36) + s
+    n /= 36n
+  }
+  return s
+}
+
 export async function roomTopic(topic) {
   const digest = await crypto.subtle.digest(
     'SHA-256',
@@ -63,4 +74,22 @@ export async function decryptMsg(key, b64) {
   const ct = raw.slice(IV_LEN)
   const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
   return JSON.parse(new TextDecoder().decode(pt))
+}
+
+export function getIdentityId() {
+  const KEY = 'ncrypt-id'
+  let id = localStorage.getItem(KEY)
+  if (!id) {
+    id = toHex(crypto.getRandomValues(new Uint8Array(16)))
+    localStorage.setItem(KEY, id)
+  }
+  return id
+}
+
+export async function nickSuffix(idHex, channel, nick) {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(idHex + '\x00' + channel + '\x00' + nick)
+  )
+  return toBase36(new Uint8Array(digest)).slice(0, 12)
 }

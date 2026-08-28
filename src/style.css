@@ -208,6 +208,12 @@ button:hover {
   min-height: 17px;
 }
 
+.note {
+  color: #777777;
+  font-size: 13px;
+  margin: 4px 16px 0;
+}
+
 .chat {
   flex-grow: 1;
   display: flex;

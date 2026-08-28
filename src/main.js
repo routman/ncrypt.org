@@ -1,5 +1,12 @@
 import { mountTopicScreen, mountChatView } from './ui.js'
-import { roomTopic, roomKey, encryptMsg, decryptMsg } from './crypto.js'
+import {
+  roomTopic,
+  roomKey,
+  encryptMsg,
+  decryptMsg,
+  getIdentityId,
+  nickSuffix,
+} from './crypto.js'
 import { connectMqtt, mqttUrl } from './mqtt.js'
 
 const RATE_MS = 2000
@@ -36,31 +43,38 @@ function onJoin(topic, nick) {
   const canSend = makeRateLimiter()
   let key = null
   let mqtTopic = null
+  let chat = null
+  let displayNick = nick
   const sent = []
 
-  const chat = mountChatView({
-    nick,
-    topic,
-    onHome: home,
-    onSend(text) {
-      if (!key) return false
-      if (text.length > MAX_LEN) return false
-      if (!canSend()) return false
-      const ts = Date.now()
-      chat.append({ nick, text, ts })
-      sent.push({ ts, text })
-      if (sent.length > 50) sent.shift()
-      encryptMsg(key, { nick, text, ts }).then((b64) => {
-        if (client) client.publish(mqtTopic, b64)
-      })
-      return true
-    },
-  })
-
-  Promise.all([roomTopic(topic), roomKey(topic)]).then(([id, aesKey]) => {
+  Promise.all([
+    roomTopic(topic),
+    roomKey(topic),
+    nickSuffix(getIdentityId(), topic, nick),
+  ]).then(([id, aesKey, suffix]) => {
     if (myGen !== gen) return
     key = aesKey
     mqtTopic = 'chat/' + id
+    displayNick = nick + '-' + suffix
+
+    chat = mountChatView({
+      nick: displayNick,
+      topic,
+      onHome: home,
+      onSend(text) {
+        if (!key) return false
+        if (text.length > MAX_LEN) return false
+        if (!canSend()) return false
+        const ts = Date.now()
+        chat.append({ nick: displayNick, text, ts })
+        sent.push({ ts, text })
+        if (sent.length > 50) sent.shift()
+        encryptMsg(key, { nick: displayNick, text, ts }).then((b64) => {
+          if (client) client.publish(mqtTopic, b64)
+        })
+        return true
+      },
+    })
 
     fetch('/api/history/' + id + '?limit=100')
       .then((res) => (res.ok ? res.json() : { messages: [] }))
@@ -78,7 +92,7 @@ function onJoin(topic, nick) {
       onMessage(t, payload) {
         decryptMsg(key, payload).then((m) => {
           const i = sent.findIndex(
-            (s) => s.ts === m.ts && s.text === m.text && m.nick === nick,
+            (s) => s.ts === m.ts && s.text === m.text && m.nick === displayNick,
           )
           if (i !== -1) {
             sent.splice(i, 1)

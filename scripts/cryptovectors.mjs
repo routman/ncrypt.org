@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash, createDecipheriv } from 'node:crypto'
-import { roomTopic, roomKey, encryptMsg, decryptMsg } from '../src/crypto.js'
+import { roomTopic, roomKey, encryptMsg, decryptMsg, nickSuffix } from '../src/crypto.js'
 
 const TOPIC = 'test'
 const ID = 'b965b2ee4da54939a284ea2c5764b14bc53856f245d987a0fe470cdf2a4e9a4b'
@@ -63,4 +63,37 @@ test('domain separation: room id is not key material', async () => {
     ['decrypt']
   )
   await assert.rejects(decryptMsg(idAsKey, b64))
+})
+
+test('nickSuffix: fixed (id, channel, nick) → fixed 12-char base36 suffix', async () => {
+  assert.equal(await nickSuffix(ID, 'test', 'Bob'), 'vzd4hhnew54i')
+})
+
+test('nickSuffix: different channel → different suffix', async () => {
+  const a = await nickSuffix(ID, 'test', 'Bob')
+  const b = await nickSuffix(ID, 'chan2', 'Bob')
+  assert.notEqual(a, b)
+  assert.equal(b, '66cswtz89oc9')
+})
+
+test('nickSuffix: different nick → different suffix', async () => {
+  const a = await nickSuffix(ID, 'test', 'Bob')
+  const b = await nickSuffix(ID, 'test', 'Ann')
+  assert.notEqual(a, b)
+  assert.equal(b, '5cu3e9vceuex')
+})
+
+test('nickSuffix: different id → different suffix', async () => {
+  const a = await nickSuffix(ID, 'test', 'Bob')
+  const b = await nickSuffix(
+    '0000000000000000000000000000000000000000000000000000000000000001',
+    'test',
+    'Bob'
+  )
+  assert.notEqual(a, b)
+  assert.equal(b, '5q7c208p4417')
+})
+
+test('nickSuffix: matches /^[0-9a-z]{12}$/', async () => {
+  assert.match(await nickSuffix(ID, 'test', 'Bob'), /^[0-9a-z]{12}$/)
 })

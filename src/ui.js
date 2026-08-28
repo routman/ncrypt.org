@@ -47,6 +47,11 @@ export function mountTopicScreen({ onJoin }) {
   nickInput.value = localStorage.getItem(NICK_KEY) || ''
   nickField.append(nickInput)
 
+  const note = document.createElement('div')
+  note.className = 'note'
+  note.textContent =
+    'your identifier is stored in this browser; clearing its data changes it (no recovery)'
+
   const error = document.createElement('div')
   error.className = 'error'
 
@@ -86,7 +91,7 @@ export function mountTopicScreen({ onJoin }) {
 
   const inner = document.createElement('div')
   inner.className = 'screen-inner'
-  inner.append(logo, tagline, topicField, nickField, error, join, links)
+  inner.append(logo, tagline, topicField, nickField, note, error, join, links)
   screen.append(inner)
   app.append(screen)
   topicInput.focus()
