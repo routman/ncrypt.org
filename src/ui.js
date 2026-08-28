@@ -74,7 +74,7 @@ export function mountTopicScreen({ onJoin }) {
   const links = document.createElement('p')
   links.className = 'links'
   const about = document.createElement('a')
-  about.href = '/about.html'
+  about.href = 'https://github.com/routman/ncrypt.org'
   about.textContent = 'about'
   const terms = document.createElement('a')
   terms.href = '/terms.html'

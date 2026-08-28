@@ -49,6 +49,11 @@
       .logo .n {
         color: var(--color-accent);
       }
+      .tagline {
+        font-size: 14px;
+        color: #999999;
+        margin: 0 0 16px;
+      }
       h1 {
         font-size: 20px;
         font-weight: normal;
@@ -69,6 +74,7 @@
   </head>
   <body>
     <div class="logo"><span class="n">n</span>crypt</div>
+    <div class="tagline">encrypted chat rooms</div>
     <h1>About</h1>
     <p>ncrypt is an end-to-end encrypted chat room. There is no account, no sign-up, and no server-side reading of your messages.</p>
     <p>The channel is the secret. Your browser derives the AES-256 key from the channel, and every message is encrypted before it leaves your device. The server only ever sees a one-way SHA-256 hash of the channel (the room id) and the ciphertext — it cannot read the messages, and it cannot recover the channel.</p>
