@@ -5,7 +5,7 @@ const CONNECTIONS = Number(process.env.CONNECTIONS || 500)
 const EXTRA = Number(process.env.EXTRA || 1)
 const CONNECT_TIMEOUT_MS = Number(process.env.CONNECT_TIMEOUT_MS || 15000)
 const FLOOD = Number(process.env.FLOOD || 300)
-const MAX_QUEUED = Number(process.env.MAX_QUEUED || 100)
+const MAX_QUEUED = Number(process.env.MAX_QUEUED || 50)
 
 function connectOne(url, id) {
   return new Promise((resolve) => {
