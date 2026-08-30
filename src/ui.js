@@ -83,8 +83,8 @@ export function mountTopicScreen({ onJoin }) {
   const join = document.createElement('button')
   join.textContent = 'connect'
   join.addEventListener('click', () => {
-    const topic = topicInput.value.trim()
-    const nick = nickInput.value.trim()
+    const topic = topicInput.value
+    const nick = nickInput.value
     if (topic.length < 1 || topic.length > 100) {
       error.textContent = 'channel must be 1-100 characters'
       return
