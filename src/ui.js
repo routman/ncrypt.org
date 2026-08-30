@@ -56,7 +56,7 @@ export function mountTopicScreen({ onJoin }) {
   function updateId() {
     const topic = topicInput.value
     const nick = nickInput.value
-    if (!nick) {
+    if (!topic || !nick) {
       idSpan.style.display = 'none'
       idSpan.textContent = ''
       return
