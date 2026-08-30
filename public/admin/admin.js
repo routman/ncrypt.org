@@ -174,11 +174,32 @@ async function blockIpOrUnblockIp(unblock) {
   els.blockIpResult.textContent = (unblock ? 'unblocked ' : 'blocked ') + ip;
 }
 
+// The room id is SHA-256("ncrypt-chat:" + topic), derived in the browser
+// (same as src/crypto.js roomTopic). The server only ever sees the hash.
+async function roomTopicId(topic) {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode('ncrypt-chat:' + topic)
+  );
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function purgeTopic() {
-  const id = els.purgeInput.value.trim().toLowerCase();
-  if (!HEX64_RE.test(id)) {
-    showError('topic id must be 64 lowercase hex chars');
+  const input = els.purgeInput.value.trim();
+  if (input === '') {
+    showError('enter a topic name or 64-hex room id');
     return;
+  }
+  let id;
+  if (HEX64_RE.test(input.toLowerCase())) {
+    id = input.toLowerCase();
+  } else {
+    try {
+      id = await roomTopicId(input);
+    } catch (err) {
+      showError('could not hash topic (paste the 64-hex room id instead)');
+      return;
+    }
   }
   const r = await adminPost('purge', { id: id });
   if (!r.ok) {
