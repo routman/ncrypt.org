@@ -239,8 +239,8 @@ button:hover {
   left: -16px;
   right: -16px;
   top: 100%;
-  height: 8px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), transparent);
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.12) 55%, transparent 100%);
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
@@ -328,8 +328,8 @@ button:hover {
   left: -16px;
   right: -16px;
   bottom: 100%;
-  height: 8px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
+  height: 20px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.12) 55%, transparent 100%);
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
