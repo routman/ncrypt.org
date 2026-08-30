@@ -5,5 +5,9 @@ AGENTS.md
 .opencode/
 PHASES.md
 docs/api.md
+docs/plan-message-limit.md
+docs/mqtt-rate-limiting-summary.md
+docs/pow-plan.md
+pow-plan-claude-opus-5-response.md
 STATE.md
 .keys/

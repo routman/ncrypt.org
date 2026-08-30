@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { loadLimitsConfig, watchLimitsFile } from './lib/limits.js';
+import { createServer } from 'node:http';
+import { loadLimitsConfig, watchLimitsFile, clientIp } from './lib/limits.js';
 import { GatewayPolicy } from './lib/gateway-policy.js';
 
 const PORT = Number(process.env.PORT || 9002);
@@ -13,6 +14,65 @@ const stopWatch = watchLimitsFile(LIMITS_FILE, policy, {
   intervalMs: 5000,
   log: (msg) => console.log(msg)
 });
+
+// --- Telemetry (instrument-first: count publishes per IP / per clientId, drop reasons) ---
+// Aggregate counters only; no per-message payloads are stored. The per-key maps
+// are hard-capped so a flood of unique clientIds/IPs cannot exhaust memory.
+const MAX_TRACKED = 500;
+
+const stats = {
+  startedAt: Date.now(),
+  connections: { total: 0, active: 0 },
+  publishes: { total: 0, dropped: { rate: 0, blocked: 0 } },
+  subscribes: { total: 0, dropped: { blocked: 0, 'room-cap': 0 } },
+  byClientId: new Map(),
+  byIp: new Map()
+};
+
+function bump(map, key, fields) {
+  let entry = map.get(key);
+  if (!entry) {
+    if (map.size >= MAX_TRACKED) return;
+    entry = { publishes: 0, drops: 0, connections: 0 };
+    map.set(key, entry);
+  }
+  for (const k of Object.keys(fields)) entry[k] += fields[k];
+}
+
+function topEntries(map, n, keyName, score) {
+  return [...map.entries()]
+    .map(([key, e]) => ({ [keyName]: key, ...e, score: score(e) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n);
+}
+
+function statsSnapshot() {
+  return {
+    uptimeSec: Math.round((Date.now() - stats.startedAt) / 1000),
+    connections: { total: stats.connections.total, active: stats.connections.active },
+    publishes: { total: stats.publishes.total, dropped: { ...stats.publishes.dropped } },
+    subscribes: { total: stats.subscribes.total, dropped: { ...stats.subscribes.dropped } },
+    byClientId: topEntries(stats.byClientId, 50, 'clientId', (e) => e.publishes + e.drops),
+    byIp: topEntries(stats.byIp, 50, 'ip', (e) => e.publishes + e.connections)
+  };
+}
+
+// Reset the cumulative counters for a fresh observation window.
+// connections.active is a live gauge (maintained by the connect/close
+// handlers), so it is intentionally left untouched here.
+function resetStats() {
+  stats.connections.total = 0;
+  stats.publishes.total = 0;
+  stats.publishes.dropped = { rate: 0, blocked: 0 };
+  stats.subscribes.total = 0;
+  stats.subscribes.dropped = { blocked: 0, 'room-cap': 0 };
+  stats.byClientId.clear();
+  stats.byIp.clear();
+}
+
+function isLoopback(ip) {
+  return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+}
 
 // --- Minimal MQTT packet parsing (client -> broker direction) ---
 
@@ -106,6 +166,13 @@ function extractPackets(buf) {
 const connections = new Map();
 let connectionSeq = 0;
 
+function releaseConnection(id) {
+  if (connections.has(id)) {
+    connections.delete(id);
+    stats.connections.active--;
+  }
+}
+
 function handleClientToBroker(ws, brokerWs, state, data) {
   state.buf = Buffer.concat([state.buf, Buffer.isBuffer(data) ? data : Buffer.from(data)]);
   const { packets, rest } = extractPackets(state.buf);
@@ -119,10 +186,13 @@ function handleClientToBroker(ws, brokerWs, state, data) {
       const { topics } = parseSubscribe(pkt.raw);
       let allowed = true;
       for (const topic of topics) {
+        stats.subscribes.total++;
         const res = policy.checkSubscribe(state.clientId || 'unknown', topic);
         if (!res.ok) {
           allowed = false;
           state.dropped[res.reason] = (state.dropped[res.reason] || 0) + 1;
+          stats.subscribes.dropped[res.reason] = (stats.subscribes.dropped[res.reason] || 0) + 1;
+          bump(stats.byClientId, state.clientId || 'unknown', { drops: 1 });
           break;
         }
       }
@@ -130,9 +200,15 @@ function handleClientToBroker(ws, brokerWs, state, data) {
     }
     if (pkt.type === 3) {
       const { topic } = parsePublish(pkt.raw);
-      const res = policy.checkPublish(state.clientId || 'unknown');
+      const cid = state.clientId || 'unknown';
+      stats.publishes.total++;
+      bump(stats.byClientId, cid, { publishes: 1 });
+      bump(stats.byIp, state.ip, { publishes: 1 });
+      const res = policy.checkPublish(cid);
       if (!res.ok) {
         state.dropped[res.reason] = (state.dropped[res.reason] || 0) + 1;
+        stats.publishes.dropped[res.reason] = (stats.publishes.dropped[res.reason] || 0) + 1;
+        bump(stats.byClientId, cid, { drops: 1 });
         continue;
       }
     }
@@ -142,16 +218,45 @@ function handleClientToBroker(ws, brokerWs, state, data) {
   }
 }
 
-const wss = new WebSocketServer({ host: HOST, port: PORT });
+// Shared HTTP server: carries the WS upgrade plus loopback-only /stats.
+const server = createServer((req, res) => {
+  const url = (req.url || '').split('?')[0];
+  const ip = req.socket.remoteAddress || '';
+  if (!isLoopback(ip)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('forbidden');
+    return;
+  }
+  if (req.method === 'GET' && url === '/stats') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(statsSnapshot()));
+    return;
+  }
+  if (req.method === 'POST' && url === '/stats/reset') {
+    resetStats();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
+  res.end('not found');
+});
 
-wss.on('connection', (clientWs) => {
+const wss = new WebSocketServer({ server });
+
+wss.on('connection', (clientWs, req) => {
   const id = ++connectionSeq;
+  const ip = clientIp(req);
   const state = {
     clientId: null,
     buf: Buffer.alloc(0),
-    dropped: {}
+    dropped: {},
+    ip
   };
   connections.set(id, state);
+  stats.connections.total++;
+  stats.connections.active++;
+  bump(stats.byIp, ip, { connections: 1 });
 
   const brokerWs = new WebSocket(BROKER_WS, ['mqtt']);
   const pending = [];
@@ -184,20 +289,22 @@ wss.on('connection', (clientWs) => {
     if (brokerWs.readyState === WebSocket.OPEN || brokerWs.readyState === WebSocket.CONNECTING) {
       brokerWs.close();
     }
-    connections.delete(id);
+    releaseConnection(id);
   });
 
   brokerWs.on('close', () => {
     if (clientWs.readyState === WebSocket.OPEN) {
       clientWs.close(1011, 'broker closed');
     }
-    connections.delete(id);
+    releaseConnection(id);
   });
 });
 
 const sweepTimer = setInterval(() => policy.sweep(Date.now()), 60000);
 sweepTimer.unref();
 
-console.log('[ncrypt-gateway] listening on ' + HOST + ':' + PORT + ' -> ' + BROKER_WS);
+server.listen(PORT, HOST, () => {
+  console.log('[ncrypt-gateway] listening on ' + HOST + ':' + PORT + ' -> ' + BROKER_WS);
+});
 
-export { wss, policy, connections, stopWatch };
+export { wss, server, policy, connections, stats, stopWatch };
