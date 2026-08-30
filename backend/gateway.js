@@ -153,7 +153,7 @@ wss.on('connection', (clientWs) => {
   };
   connections.set(id, state);
 
-  const brokerWs = new WebSocket(BROKER_WS);
+  const brokerWs = new WebSocket(BROKER_WS, ['mqtt']);
   const pending = [];
 
   clientWs.on('message', (data) => {

@@ -28,16 +28,15 @@ ncrypt.org {
 	# everything else gets a flat 403 before proxying.
 	@adminDeny not remote_ip 127.0.0.1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10
 
-	# MQTT broker (websockets) -> Mosquitto on loopback.
-	# Rate limit: cap new-connection rate per client IP (10 / 10 s)
-	# to blunt reconnect storms against the broker.
+	# MQTT broker (websockets) -> ncrypt gateway on loopback (127.0.0.1:9002),
+	# which bridges to Mosquitto (127.0.0.1:9001) and enforces the per-clientId
+	# rate limit, room cap and clientId blocklist.
+	# NOTE: no Caddy rate_limit here — the live Caddy build (Debian 2.11.4)
+	# lacks the rate_limit module, so the directive is not loadable. Rate
+	# limiting for /mqtt is enforced by the gateway (per-clientId 1 msg/2 s,
+	# burst 5) + the nftables per-IP new-connection cap (T9.5).
 	handle /mqtt {
-		rate_limit {
-			period 10s
-			cell_count 10
-			key_remote_ip
-		}
-		reverse_proxy 127.0.0.1:9001
+		reverse_proxy 127.0.0.1:9002
 	}
 
 	# Admin API: 403 for non-allowlisted source IPs, otherwise proxy.
@@ -55,14 +54,11 @@ ncrypt.org {
 	}
 
 	# API -> Node history service (127.0.0.1:3002).
-	# Rate limit: 50 requests / 10 s per client IP — edge backstop for
-	# the client-side 1 msg / 2 s cap (excess gets a flat 429).
+	# NOTE: no Caddy rate_limit here — the live Caddy build (Debian 2.11.4)
+	# lacks the rate_limit module, so the directive is not loadable. Rate
+	# limiting for /api/* is enforced by the app layer (per-topic 1 msg/2 s,
+	# burst 5) + the nftables per-IP new-connection cap (T9.5).
 	handle /api/* {
-		rate_limit {
-			period 10s
-			cell_count 50
-			key_remote_ip
-		}
 		reverse_proxy 127.0.0.1:3002
 	}
 

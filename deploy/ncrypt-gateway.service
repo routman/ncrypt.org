@@ -1,0 +1,24 @@
+[Unit]
+Description=ncrypt MQTT gateway (per-clientId rate limit, room cap, blocklist)
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+
+[Service]
+User=ncrypt
+Group=ncrypt
+WorkingDirectory=/opt/ncrypt
+Environment=HOME=/opt/ncrypt
+Environment=PORT=9002
+Environment=HOST=127.0.0.1
+Environment=BROKER_WS=ws://127.0.0.1:9001
+Environment=LIMITS_FILE=/opt/ncrypt/limits.json
+ExecStart=/usr/bin/node /opt/ncrypt/gateway.js
+Restart=on-failure
+RestartSec=2
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
