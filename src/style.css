@@ -237,6 +237,7 @@ button:hover {
 
 .msg .nick {
   color: var(--msg-color, var(--color-primary));
+  font-size: 14px;
 }
 
 .dot {
