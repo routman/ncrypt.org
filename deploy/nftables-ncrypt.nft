@@ -1,0 +1,24 @@
+# ncrypt.org — per-source-IP connection-limit backstop on 443 (T9.5)
+#
+# Purpose: cap concurrent NEW 443 connections per /32 source IP at 20,
+# dropping the excess. Backstop against connection-flood abuse of the
+# Caddy front (ncrypt.org + publicnote.com both serve on 443 from this
+# box). Established/related connections are accepted, so normal browsing
+# (a handful of connections per visitor) is unaffected.
+#
+# Load:   sudo nft -f deploy/nftables-ncrypt.nft
+# Verify: sudo nft list table inet ncrypt
+# Rollback: sudo nft delete table inet ncrypt
+#
+# NOTE: the `ip filter` table is managed by iptables-nft (Tailscale) and
+# must NOT be modified. This is a separate, dedicated table.
+
+table inet ncrypt {
+  chain input {
+    type filter hook input priority filter; policy accept;
+    iifname "lo" accept
+    iifname "tailscale0" accept
+    ct state established,related accept
+    tcp dport 443 ct state new meter ncrypt_443 { ip saddr ct count over 20 } counter drop
+  }
+}
