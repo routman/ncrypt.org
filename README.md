@@ -4,9 +4,9 @@ End-to-end encrypted chat rooms. No account, no password, no tracking.
 
 ## How it works
 
-The topic is the key. When you enter a topic, your browser derives an AES-256 key from it (SHA-256, Web Crypto) and encrypts every message locally before it leaves your device. The server only ever sees `SHA-256(topic)` (the room id) and ciphertext — it cannot read the messages and cannot recover the topic.
+The channel name is the encryption secret. Entering a channel causes your browser to derive an AES-256 key from it (SHA-256, Web Crypto); every message is then encrypted locally before it leaves your device. The server only ever sees `SHA-256(channel)` (the room id) and ciphertext — it cannot read the messages and cannot recover the channel.
 
-Anyone who knows the topic can join the room. Share the topic with the people you want in the room, and treat it like a password.
+Anyone who knows the channel name can join the room. Share the channel with the people you want in the room, and treat it like a password.
 
 ## Privacy
 
@@ -17,7 +17,7 @@ Anyone who knows the topic can join the room. Share the topic with the people yo
 
 ## Security
 
-- The topic is the secret. Use a long, random topic for private rooms — short topics can be guessed.
+- The channel is the secret. Use a long, random channel for private rooms — short channels can be guessed.
 - Messages are encrypted with AES-256-GCM; the key is derived in your browser and never leaves your device.
 - History is capped and expires. Don't rely on ncrypt as a permanent record.
 - You are responsible for the messages you send.
@@ -25,7 +25,7 @@ Anyone who knows the topic can join the room. Share the topic with the people yo
 ## Getting started
 
 1. Open https://ncrypt.org
-2. Enter a topic (or create one) and pick a nickname.
+2. Enter a channel (or create one) and pick a nickname.
 3. Chat — a reload catches you up with the last 100 messages.
 
 ## Development
