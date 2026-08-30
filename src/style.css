@@ -154,6 +154,23 @@ input::selection {
   margin: 16px;
 }
 
+.field.nickrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field.nickrow input {
+  flex: 1;
+  min-width: 0;
+}
+
+.field.nickrow .id {
+  color: #777777;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
 input {
   display: block;
   font-family: "IBM Plex Mono", serif;

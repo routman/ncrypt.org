@@ -1,3 +1,5 @@
+import { getIdentityId, nickSuffix } from './crypto.js'
+
 const NICK_KEY = 'ncrypt-nick'
 
 function makeLogo() {
@@ -39,13 +41,36 @@ export function mountTopicScreen({ onJoin }) {
   topicField.append(topicInput)
 
   const nickField = document.createElement('div')
-  nickField.className = 'field'
+  nickField.className = 'field nickrow'
   const nickInput = document.createElement('input')
   nickInput.autocapitalize = 'off'
   nickInput.maxLength = 20
   nickInput.placeholder = 'nickname'
   nickInput.value = localStorage.getItem(NICK_KEY) || ''
-  nickField.append(nickInput)
+  const idSpan = document.createElement('span')
+  idSpan.className = 'id'
+  idSpan.style.display = 'none'
+  nickField.append(nickInput, idSpan)
+
+  let idGen = 0
+  function updateId() {
+    const topic = topicInput.value
+    const nick = nickInput.value
+    if (!nick) {
+      idSpan.style.display = 'none'
+      idSpan.textContent = ''
+      return
+    }
+    idSpan.style.display = ''
+    const myGen = ++idGen
+    nickSuffix(getIdentityId(), topic, nick).then((suffix) => {
+      if (myGen !== idGen) return
+      idSpan.textContent = '-' + suffix
+    })
+  }
+  topicInput.addEventListener('input', updateId)
+  nickInput.addEventListener('input', updateId)
+  updateId()
 
   const note = document.createElement('div')
   note.className = 'note'
