@@ -16,6 +16,15 @@ function fmtTime(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+function nickColor(nick) {
+  let h = 0x811c9dc5
+  for (let i = 0; i < nick.length; i++) {
+    h ^= nick.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return 'hsl(' + ((h >>> 0) % 360) + ' 85% 65%)'
+}
+
 export function mountTopicScreen({ onJoin }) {
   const app = document.getElementById('app')
   app.textContent = ''
@@ -152,7 +161,9 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
   return {
     append(msg) {
       const m = document.createElement('div')
-      m.className = 'msg' + (msg.nick === nick ? ' own' : '')
+      const own = msg.nick === nick
+      m.className = 'msg' + (own ? ' own' : '')
+      if (!own) m.style.setProperty('--msg-color', nickColor(msg.nick))
       const head = document.createElement('div')
       head.className = 'head'
       const n = document.createElement('span')

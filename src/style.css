@@ -260,7 +260,7 @@ button:hover {
 .msg {
   max-width: 75%;
   padding: 8px 12px;
-  border: 1px solid #4a454a;
+  border: 1px solid var(--msg-color, #4a454a);
   background: #ffffff0f;
   border-radius: 4px;
   align-self: flex-start;
@@ -270,6 +270,7 @@ button:hover {
 .msg.own {
   align-self: flex-end;
   background: rgba(255, 255, 255, 0.02);
+  border-color: var(--color-primary);
 }
 
 .msg .head {
