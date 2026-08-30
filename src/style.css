@@ -235,6 +235,10 @@ button:hover {
   color: var(--color-primary);
 }
 
+.msg .nick {
+  color: var(--msg-color, var(--color-primary));
+}
+
 .dot {
   display: inline-block;
   width: 8px;
