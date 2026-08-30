@@ -224,11 +224,19 @@ button:hover {
 }
 
 .chatheader {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 8px;
   margin-bottom: 8px;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0);
+  transition: box-shadow 0.2s ease;
+}
+
+.chat.scrolled-top .chatheader {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.5);
 }
 
 .nick {
@@ -296,9 +304,17 @@ button:hover {
 }
 
 .composer {
+  position: relative;
+  z-index: 1;
   display: flex;
   gap: 12px;
   margin-top: 8px;
+  box-shadow: 0 -4px 12px -2px rgba(0, 0, 0, 0);
+  transition: box-shadow 0.2s ease;
+}
+
+.chat.scrolled-bottom .composer {
+  box-shadow: 0 -4px 12px -2px rgba(0, 0, 0, 0.5);
 }
 
 .composer input {

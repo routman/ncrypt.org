@@ -158,6 +158,15 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
   app.append(chat)
   if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
 
+  function updateShadows() {
+    const atTop = messages.scrollTop <= 0
+    const atBottom = messages.scrollTop + messages.clientHeight >= messages.scrollHeight - 1
+    chat.classList.toggle('scrolled-top', !atTop)
+    chat.classList.toggle('scrolled-bottom', !atBottom)
+  }
+  messages.addEventListener('scroll', updateShadows)
+  updateShadows()
+
   return {
     append(msg) {
       const m = document.createElement('div')
