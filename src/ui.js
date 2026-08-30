@@ -52,16 +52,22 @@ export function mountTopicScreen({ onJoin }) {
   idSpan.style.display = 'none'
   nickField.append(nickInput, idSpan)
 
+  const note = document.createElement('div')
+  note.className = 'note'
+  note.textContent =
+    'your unique identifier is stored in this browser and cannot be recovered if you clear site data'
+
   let idGen = 0
   function updateId() {
     const topic = topicInput.value
     const nick = nickInput.value
-    if (!topic || !nick) {
-      idSpan.style.display = 'none'
+    const show = Boolean(topic && nick)
+    idSpan.style.display = show ? '' : 'none'
+    note.style.visibility = show ? 'visible' : 'hidden'
+    if (!show) {
       idSpan.textContent = ''
       return
     }
-    idSpan.style.display = ''
     const myGen = ++idGen
     nickSuffix(getIdentityId(), topic, nick).then((suffix) => {
       if (myGen !== idGen) return
@@ -71,11 +77,6 @@ export function mountTopicScreen({ onJoin }) {
   topicInput.addEventListener('input', updateId)
   nickInput.addEventListener('input', updateId)
   updateId()
-
-  const note = document.createElement('div')
-  note.className = 'note'
-  note.textContent =
-    'your identifier is stored in this browser; clearing its data changes it (no recovery)'
 
   const error = document.createElement('div')
   error.className = 'error'
