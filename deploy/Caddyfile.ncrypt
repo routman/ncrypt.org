@@ -29,7 +29,14 @@ ncrypt.org {
 	@adminDeny not remote_ip 127.0.0.1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10
 
 	# MQTT broker (websockets) -> Mosquitto on loopback.
+	# Rate limit: cap new-connection rate per client IP (10 / 10 s)
+	# to blunt reconnect storms against the broker.
 	handle /mqtt {
+		rate_limit {
+			period 10s
+			cell_count 10
+			key_remote_ip
+		}
 		reverse_proxy 127.0.0.1:9001
 	}
 
@@ -48,7 +55,14 @@ ncrypt.org {
 	}
 
 	# API -> Node history service (127.0.0.1:3002).
+	# Rate limit: 50 requests / 10 s per client IP — edge backstop for
+	# the client-side 1 msg / 2 s cap (excess gets a flat 429).
 	handle /api/* {
+		rate_limit {
+			period 10s
+			cell_count 50
+			key_remote_ip
+		}
 		reverse_proxy 127.0.0.1:3002
 	}
 
