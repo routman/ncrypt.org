@@ -2,7 +2,7 @@ import express from 'express';
 import mqtt from 'mqtt';
 import { DatabaseSync } from 'node:sqlite';
 import { pathToFileURL } from 'node:url';
-import { Limits, loadLimitsConfig, watchLimitsFile } from './lib/limits.js';
+import { Limits, loadLimitsConfig, watchLimitsFile, clientIp } from './lib/limits.js';
 import { isAllowedAdminIp, adminSourceIp, rewriteLimitsFile, SqliteAudit } from './lib/admin.js';
 
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -160,6 +160,14 @@ export function createService(options = {}) {
   const app = express();
   app.use(express.json());
 
+  app.use('/api', (req, res, next) => {
+    const ip = clientIp(req);
+    if (limits.cfg.blockedIps.includes(ip)) {
+      return res.status(403).json({ error: 'blocked' });
+    }
+    next();
+  });
+
   app.get('/api/history/:id', (req, res) => {
     const id = String(req.params.id || '');
     if (!HEX64.test(id)) {
@@ -198,7 +206,8 @@ export function createService(options = {}) {
       burst: cfg.burst,
       perTopic: cfg.perTopic,
       globalRows: cfg.globalRows,
-      ttlDays: cfg.ttlDays
+      ttlDays: cfg.ttlDays,
+      blockedIps: cfg.blockedIps
     });
   });
 
@@ -236,6 +245,30 @@ export function createService(options = {}) {
     persistLimits();
     audit.record('unblock', JSON.stringify({ clientId }));
     res.json({ ok: true, blockedClients: limits.cfg.blockedClients.length });
+  });
+
+  admin.post('/block-ip', (req, res) => {
+    const ip = req.body && req.body.ip;
+    if (typeof ip !== 'string' || ip.length === 0 || ip.length > 45) {
+      return res.status(400).json({ error: 'bad ip' });
+    }
+    if (!limits.cfg.blockedIps.includes(ip)) {
+      limits.cfg.blockedIps.push(ip);
+    }
+    persistLimits();
+    audit.record('block-ip', JSON.stringify({ ip }));
+    res.json({ ok: true, blockedIps: limits.cfg.blockedIps.length });
+  });
+
+  admin.post('/unblock-ip', (req, res) => {
+    const ip = req.body && req.body.ip;
+    if (typeof ip !== 'string' || ip.length === 0) {
+      return res.status(400).json({ error: 'bad ip' });
+    }
+    limits.cfg.blockedIps = limits.cfg.blockedIps.filter((c) => c !== ip);
+    persistLimits();
+    audit.record('unblock-ip', JSON.stringify({ ip }));
+    res.json({ ok: true, blockedIps: limits.cfg.blockedIps.length });
   });
 
   admin.post('/purge', (req, res) => {

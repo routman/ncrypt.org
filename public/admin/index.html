@@ -101,6 +101,18 @@
         </div>
 
         <div class="card">
+          <h2>ip blocklist</h2>
+          <div class="card-sub">blocked source ips · <span id="admin-blocked-ips-count">-</span> blocked</div>
+          <div class="adminrow">
+            <input id="admin-block-ip" class="wide" placeholder="ip address">
+            <div class="link" id="admin-block-ip-btn">block</div>
+            <div class="link" id="admin-unblock-ip-btn">unblock</div>
+          </div>
+          <div class="field-hint">block / unblock a source ip (refuses /api + /mqtt)</div>
+          <span id="admin-block-ip-result" class="action-result"></span>
+        </div>
+
+        <div class="card">
           <h2>purge</h2>
           <div class="card-sub">delete every message of one topic</div>
           <div class="adminrow">

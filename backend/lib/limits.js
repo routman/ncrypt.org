@@ -6,7 +6,8 @@ export const LIMITS_DEFAULTS = {
   perTopic: 100,
   globalRows: 50000,
   ttlDays: 30,
-  blockedClients: []
+  blockedClients: [],
+  blockedIps: []
 };
 
 export function deepMerge(base, extra) {

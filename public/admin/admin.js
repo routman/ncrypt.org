@@ -96,6 +96,9 @@ async function prefillLimits() {
   els.limitTopic.value = cfg.perTopic !== undefined ? String(cfg.perTopic) : '';
   els.limitRows.value = cfg.globalRows !== undefined ? String(cfg.globalRows) : '';
   els.limitTtl.value = cfg.ttlDays !== undefined ? String(cfg.ttlDays) : '';
+  if (Array.isArray(cfg.blockedIps)) {
+    els.blockedIpsCount.textContent = String(cfg.blockedIps.length);
+  }
 }
 
 async function applyLimits() {
@@ -151,6 +154,24 @@ async function blockOrUnblock(unblock) {
     els.blockedCount.textContent = String(r.data.blockedClients);
   }
   els.blockResult.textContent = (unblock ? 'unblocked ' : 'blocked ') + clientId;
+}
+
+async function blockIpOrUnblockIp(unblock) {
+  const ip = els.blockIp.value.trim();
+  if (ip === '' || ip.length > 45) {
+    showError('ip address required (max 45 chars)');
+    return;
+  }
+  const r = await adminPost(unblock ? 'unblock-ip' : 'block-ip', { ip: ip });
+  if (!r.ok) {
+    showHttpError(r.status);
+    return;
+  }
+  clearError();
+  if (r.data && r.data.blockedIps !== undefined) {
+    els.blockedIpsCount.textContent = String(r.data.blockedIps);
+  }
+  els.blockIpResult.textContent = (unblock ? 'unblocked ' : 'blocked ') + ip;
 }
 
 async function purgeTopic() {
@@ -225,6 +246,9 @@ function init() {
   els.blockClient = document.getElementById('admin-block-client');
   els.blockedCount = document.getElementById('admin-blocked-count');
   els.blockResult = document.getElementById('admin-block-result');
+  els.blockIp = document.getElementById('admin-block-ip');
+  els.blockedIpsCount = document.getElementById('admin-blocked-ips-count');
+  els.blockIpResult = document.getElementById('admin-block-ip-result');
   els.purgeInput = document.getElementById('admin-purge-input');
   els.purgeResult = document.getElementById('admin-purge-result');
   els.audit = document.getElementById('admin-audit');
@@ -240,6 +264,12 @@ function init() {
   });
   document.getElementById('admin-unblock-btn').addEventListener('click', function() {
     blockOrUnblock(true);
+  });
+  document.getElementById('admin-block-ip-btn').addEventListener('click', function() {
+    blockIpOrUnblockIp(false);
+  });
+  document.getElementById('admin-unblock-ip-btn').addEventListener('click', function() {
+    blockIpOrUnblockIp(true);
   });
   document.getElementById('admin-purge-btn').addEventListener('click', function() {
     purgeTopic();

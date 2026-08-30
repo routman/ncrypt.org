@@ -163,6 +163,56 @@ test('admin: audit records actions', async () => {
   });
 });
 
+test('blockedIps: blocked source ip → 403 on /api/history', async () => {
+  await withService({ trustProxy: true, limits: { blockedIps: ['8.8.8.8'] } }, async (svc, base) => {
+    const res = await fetch(base + '/api/history/' + 'a'.repeat(64), {
+      headers: { 'x-forwarded-for': '8.8.8.8' }
+    });
+    assert.equal(res.status, 403);
+    const body = await res.json();
+    assert.equal(body.error, 'blocked');
+  });
+});
+
+test('blockedIps: unblocked source ip → 200 on /api/history', async () => {
+  await withService({ trustProxy: true, limits: { blockedIps: ['8.8.8.8'] } }, async (svc, base) => {
+    const res = await fetch(base + '/api/history/' + 'a'.repeat(64), {
+      headers: { 'x-forwarded-for': '9.9.9.9' }
+    });
+    assert.equal(res.status, 200);
+  });
+});
+
+test('admin: block-ip adds to blockedIps', async () => {
+  await withService({ trustProxy: true }, async (svc, base) => {
+    const headers = { ...ADMIN, 'x-forwarded-for': '127.0.0.1' };
+    const res = await fetch(base + '/api/admin/block-ip', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ ip: '1.2.3.4' })
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.blockedIps, 1);
+    assert.deepEqual(svc.limits.cfg.blockedIps, ['1.2.3.4']);
+  });
+});
+
+test('admin: unblock-ip removes from blockedIps', async () => {
+  await withService({ trustProxy: true, limits: { blockedIps: ['1.2.3.4', '5.6.7.8'] } }, async (svc, base) => {
+    const headers = { ...ADMIN, 'x-forwarded-for': '127.0.0.1' };
+    const res = await fetch(base + '/api/admin/unblock-ip', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ ip: '1.2.3.4' })
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.blockedIps, 1);
+    assert.deepEqual(svc.limits.cfg.blockedIps, ['5.6.7.8']);
+  });
+});
+
 test('global cap: sweep prunes oldest rows down to globalRows', async () => {
   await withService({ limits: { perTopic: 100000, globalRows: 10, ttlDays: 30, burst: 100000 } }, async (svc) => {
     const idA = 'a'.repeat(64);
