@@ -99,7 +99,7 @@ input::selection {
   font-weight: 300;
   letter-spacing: 7px;
   color: var(--color-heading);
-  margin: 16px;
+  margin: 16px 16px 0;
   user-select: none;
 }
 
