@@ -149,26 +149,36 @@ input::selection {
 @media (max-width: 480px) {
   .chatheader {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr;
     grid-template-rows: auto auto;
     grid-template-areas:
-      "logo nickwrap"
-      "topicwrap mute";
+      "logo topicwrap"
+      "nickwrap mute";
     align-items: center;
+    row-gap: 4px;
+    column-gap: 8px;
   }
   .chatheader .logo {
     grid-area: logo;
   }
-  .chatheader .nickwrap {
-    grid-area: nickwrap;
-    justify-content: flex-end;
-  }
   .chatheader .topicwrap {
     grid-area: topicwrap;
-    justify-content: flex-start;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+  .chatheader .nickwrap {
+    grid-area: nickwrap;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .chatheader .nickwrap .nick {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .chatheader .mute {
     grid-area: mute;
+    justify-self: end;
   }
 }
 
@@ -421,6 +431,14 @@ button:hover {
 .composer button {
   margin: 0;
   padding: 8px 16px;
+  color: #ffffff;
+  background: var(--color-bg);
+  border: 1px solid var(--color-primary);
+}
+
+.composer button:hover {
+  color: #ffffff;
+  border-color: var(--color-accent);
 }
 
 .links {
