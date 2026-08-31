@@ -147,6 +147,9 @@ input::selection {
   .chatheader .nickwrap {
     order: 1;
   }
+  .chatheader .mute {
+    order: 2;
+  }
 }
 
 .field {
@@ -271,28 +274,41 @@ button:hover {
   background: var(--color-primary);
 }
 
-.chatheader .presence {
-  order: 4;
-  flex: 0 0 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 12px;
+.chatheader .mute {
+  order: 3;
+  font-size: 13px;
+  font-weight: 300;
+  padding: 4px 10px;
+  margin: 0;
+  border-radius: 4px;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  background: transparent;
+  cursor: pointer;
 }
 
-.presence-item {
+.chatheader .mute:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.chatheader .mute.muted {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.msg .nickwrap {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  color: #999999;
+  gap: 6px;
 }
 
-.pdot {
+.msg .nickdot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
+  background: var(--msg-color, var(--color-primary));
   flex: 0 0 auto;
 }
 

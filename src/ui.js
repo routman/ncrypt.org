@@ -106,7 +106,8 @@ export function mountTopicScreen({ onJoin }) {
   topicInput.focus()
 }
 
-export function mountChatView({ nick, topic, onHome, onSend }) {
+export function mountChatView({ nick, topic, muted: initialMuted, onHome, onToggleMute, onSend }) {
+  let isMuted = initialMuted
   const app = document.getElementById('app')
   app.textContent = ''
 
@@ -129,10 +130,20 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
   const nickwrap = document.createElement('span')
   nickwrap.className = 'nickwrap'
   nickwrap.append(nickLabel, dot)
-  const presence = document.createElement('div')
-  presence.className = 'presence'
-  presence.hidden = true
-  header.append(logo, topicLabel, nickwrap, presence)
+  const muteBtn = document.createElement('button')
+  muteBtn.className = 'mute'
+  muteBtn.type = 'button'
+  muteBtn.textContent = isMuted ? 'muted' : 'sound'
+  muteBtn.title = isMuted ? 'unmute' : 'mute'
+  muteBtn.classList.toggle('muted', isMuted)
+  muteBtn.addEventListener('click', () => {
+    isMuted = !isMuted
+    onToggleMute(isMuted)
+    muteBtn.textContent = isMuted ? 'muted' : 'sound'
+    muteBtn.title = isMuted ? 'unmute' : 'mute'
+    muteBtn.classList.toggle('muted', isMuted)
+  })
+  header.append(logo, topicLabel, nickwrap, muteBtn)
 
   const messages = document.createElement('div')
   messages.className = 'messages'
@@ -178,13 +189,18 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
       if (!own) m.style.setProperty('--msg-color', nickColor(msg.nick))
       const head = document.createElement('div')
       head.className = 'head'
+      const nickwrap = document.createElement('span')
+      nickwrap.className = 'nickwrap'
+      const ndot = document.createElement('span')
+      ndot.className = 'nickdot'
       const n = document.createElement('span')
       n.className = 'nick'
       n.textContent = msg.nick
+      nickwrap.append(ndot, n)
       const t = document.createElement('span')
       t.className = 'time'
       t.textContent = fmtTime(msg.ts)
-      head.append(n, t)
+      head.append(nickwrap, t)
       const body = document.createElement('span')
       body.className = 'text'
       body.textContent = msg.text
@@ -194,19 +210,6 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
     },
     setConnected(connected) {
       dot.classList.toggle('on', connected)
-    },
-    setPresence(onlineNicks) {
-      presence.textContent = ''
-      for (const n of onlineNicks) {
-        const item = document.createElement('span')
-        item.className = 'presence-item'
-        const pdot = document.createElement('span')
-        pdot.className = 'pdot'
-        pdot.style.background = nickColor(n)
-        item.append(pdot, document.createTextNode(n))
-        presence.append(item)
-      }
-      presence.hidden = onlineNicks.length === 0
     },
   }
 }

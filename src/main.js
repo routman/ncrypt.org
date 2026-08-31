@@ -8,13 +8,12 @@ import {
   nickSuffix,
 } from './crypto.js'
 import { connectMqtt, mqttUrl } from './mqtt.js'
+import { primeAudio, ding } from './sound.js'
 
 const RATE_MS = 2000
 const BURST = 5
 const MAX_LEN = 500
-const PRESENCE_INTERVAL = 20000
-const PRESENCE_TIMEOUT = 60000
-const PRESENCE_REFRESH = 10000
+const MUTE_KEY = 'ncrypt-mute'
 
 function makeRateLimiter() {
   let tokens = BURST
@@ -31,19 +30,10 @@ function makeRateLimiter() {
 
 let client = null
 let gen = 0
-let presenceTimer = null
-let refreshTimer = null
+let muted = localStorage.getItem(MUTE_KEY) === '1'
 
 function home() {
   gen++
-  if (presenceTimer) {
-    clearInterval(presenceTimer)
-    presenceTimer = null
-  }
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
-    refreshTimer = null
-  }
   if (client) {
     client.close()
     client = null
@@ -56,29 +46,20 @@ function onJoin(topic, nick) {
   const canSend = makeRateLimiter()
   let key = null
   let mqtTopic = null
-  let presenceTopic = null
   let chat = null
   let displayNick = nick
   const sent = []
-  const presence = new Map()
 
-  function publishPresence() {
-    if (!key || !client) return
-    encryptMsg(key, { nick: displayNick, ts: Date.now() }).then((b64) => {
-      if (client) client.publish(presenceTopic, b64)
-    })
+  function playDing() {
+    if (!muted) ding()
   }
 
-  function refreshPresence() {
-    if (!chat) return
-    const now = Date.now()
-    const online = []
-    for (const [n, lastSeen] of presence) {
-      if (now - lastSeen < PRESENCE_TIMEOUT) online.push(n)
-      else presence.delete(n)
-    }
-    chat.setPresence(online.filter((n) => n !== displayNick))
+  function toggleMute(next) {
+    muted = next
+    localStorage.setItem(MUTE_KEY, next ? '1' : '0')
   }
+
+  primeAudio()
 
   Promise.all([
     roomTopic(topic),
@@ -88,13 +69,14 @@ function onJoin(topic, nick) {
     if (myGen !== gen) return
     key = aesKey
     mqtTopic = 'chat/' + id
-    presenceTopic = 'presence/' + id
     displayNick = nick + '-' + suffix
 
     chat = mountChatView({
       nick: displayNick,
       topic,
+      muted,
       onHome: home,
+      onToggleMute: toggleMute,
       onSend(text) {
         if (!key) return false
         if (text.length > MAX_LEN) return false
@@ -103,6 +85,7 @@ function onJoin(topic, nick) {
         chat.append({ nick: displayNick, text, ts })
         sent.push({ ts, text })
         if (sent.length > 50) sent.shift()
+        playDing()
         encryptMsg(key, { nick: displayNick, text, ts }).then((b64) => {
           if (client) client.publish(mqtTopic, b64)
         })
@@ -122,17 +105,8 @@ function onJoin(topic, nick) {
 
     client = connectMqtt({
       url: mqttUrl(),
-      topics: [mqtTopic, presenceTopic],
-      onMessage(t, payload) {
-        if (t === presenceTopic) {
-          decryptMsg(key, payload).then((m) => {
-            if (m && m.nick) {
-              presence.set(m.nick, Date.now())
-              refreshPresence()
-            }
-          }).catch(() => {})
-          return
-        }
+      topic: mqtTopic,
+      onMessage(_t, payload) {
         decryptMsg(key, payload).then((m) => {
           const i = sent.findIndex(
             (s) => s.ts === m.ts && s.text === m.text && m.nick === displayNick,
@@ -142,16 +116,13 @@ function onJoin(topic, nick) {
             return
           }
           chat.append(m)
+          playDing()
         }).catch(() => {})
       },
       onStatus(connected) {
         chat.setConnected(connected)
       },
     })
-
-    publishPresence()
-    presenceTimer = setInterval(publishPresence, PRESENCE_INTERVAL)
-    refreshTimer = setInterval(refreshPresence, PRESENCE_REFRESH)
   })
 }
 
