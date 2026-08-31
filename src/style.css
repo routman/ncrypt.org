@@ -338,6 +338,25 @@ button.connect:hover {
   gap: 8px;
   padding: 8px;
   min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #4a454a transparent;
+}
+
+.messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: #4a454a;
+  border-radius: 4px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
 }
 
 .msg {
