@@ -312,6 +312,10 @@ button:hover {
   flex: 0 0 auto;
 }
 
+.msg .nickdot.off {
+  display: none;
+}
+
 .messages {
   flex-grow: 1;
   overflow-y: auto;

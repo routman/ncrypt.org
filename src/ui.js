@@ -108,6 +108,8 @@ export function mountTopicScreen({ onJoin }) {
 
 export function mountChatView({ nick, topic, muted: initialMuted, onHome, onToggleMute, onSend }) {
   let isMuted = initialMuted
+  let onlineNicks = new Set()
+  const msgDots = []
   const app = document.getElementById('app')
   app.textContent = ''
 
@@ -193,10 +195,12 @@ export function mountChatView({ nick, topic, muted: initialMuted, onHome, onTogg
       nickwrap.className = 'nickwrap'
       const ndot = document.createElement('span')
       ndot.className = 'nickdot'
+      ndot.classList.toggle('off', !onlineNicks.has(msg.nick))
       const n = document.createElement('span')
       n.className = 'nick'
       n.textContent = msg.nick
       nickwrap.append(ndot, n)
+      msgDots.push({ nick: msg.nick, dot: ndot })
       const t = document.createElement('span')
       t.className = 'time'
       t.textContent = fmtTime(msg.ts)
@@ -210,6 +214,12 @@ export function mountChatView({ nick, topic, muted: initialMuted, onHome, onTogg
     },
     setConnected(connected) {
       dot.classList.toggle('on', connected)
+    },
+    setPresence(nicks) {
+      onlineNicks = new Set(nicks)
+      for (const { nick: n, dot: d } of msgDots) {
+        d.classList.toggle('off', !onlineNicks.has(n))
+      }
     },
   }
 }
