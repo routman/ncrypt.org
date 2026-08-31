@@ -146,7 +146,7 @@ input::selection {
   gap: 6px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .chatheader {
     display: grid;
     grid-template-columns: auto 1fr;
