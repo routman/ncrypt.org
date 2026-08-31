@@ -6,7 +6,7 @@ function randomClientId() {
   return 'ncrypt-' + hex
 }
 
-export function connectMqtt({ url, topic, onMessage, onStatus }) {
+export function connectMqtt({ url, topics, onMessage, onStatus }) {
   const client = mqtt.connect(url, {
     clientId: randomClientId(),
     clean: true,
@@ -23,7 +23,7 @@ export function connectMqtt({ url, topic, onMessage, onStatus }) {
   }
 
   client.on('connect', () => {
-    client.subscribe(topic, { qos: 0 })
+    client.subscribe(topics, { qos: 0 })
     setStatus(true)
   })
 

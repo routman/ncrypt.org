@@ -230,7 +230,7 @@ button:hover {
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 8px;
-  margin-bottom: 8px;
+  padding-bottom: 16px;
 }
 
 .chatheader::after {
@@ -269,6 +269,31 @@ button:hover {
 
 .dot.on {
   background: var(--color-primary);
+}
+
+.chatheader .presence {
+  order: 4;
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.presence-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #999999;
+}
+
+.pdot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
 }
 
 .messages {
@@ -319,7 +344,7 @@ button:hover {
   z-index: 1;
   display: flex;
   gap: 12px;
-  margin-top: 8px;
+  padding-top: 16px;
 }
 
 .composer::before {

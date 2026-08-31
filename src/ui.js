@@ -129,7 +129,10 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
   const nickwrap = document.createElement('span')
   nickwrap.className = 'nickwrap'
   nickwrap.append(nickLabel, dot)
-  header.append(logo, topicLabel, nickwrap)
+  const presence = document.createElement('div')
+  presence.className = 'presence'
+  presence.hidden = true
+  header.append(logo, topicLabel, nickwrap, presence)
 
   const messages = document.createElement('div')
   messages.className = 'messages'
@@ -191,6 +194,19 @@ export function mountChatView({ nick, topic, onHome, onSend }) {
     },
     setConnected(connected) {
       dot.classList.toggle('on', connected)
+    },
+    setPresence(onlineNicks) {
+      presence.textContent = ''
+      for (const n of onlineNicks) {
+        const item = document.createElement('span')
+        item.className = 'presence-item'
+        const pdot = document.createElement('span')
+        pdot.className = 'pdot'
+        pdot.style.background = nickColor(n)
+        item.append(pdot, document.createTextNode(n))
+        presence.append(item)
+      }
+      presence.hidden = onlineNicks.length === 0
     },
   }
 }
