@@ -13,7 +13,13 @@ function makeLogo() {
 }
 
 function fmtTime(ts) {
-  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const d = new Date(ts)
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const now = new Date()
+  if (d.toDateString() === now.toDateString()) return time
+  let date = d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  if (d.getFullYear() !== now.getFullYear()) date += ' ' + d.getFullYear()
+  return date + ', ' + time
 }
 
 function nickColor(nick) {
