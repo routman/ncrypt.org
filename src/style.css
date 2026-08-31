@@ -147,19 +147,20 @@ input::selection {
 }
 
 @media (max-width: 480px) {
-  .chatheader .nickwrap {
+  .chatheader .logo {
     order: 1;
-    flex: 0 0 100%;
-    justify-content: flex-end;
   }
-  .chatheader .mute {
+  .chatheader .nickwrap {
     order: 2;
-    margin-left: auto;
+    flex: 1;
+    justify-content: flex-end;
   }
   .chatheader .topicwrap {
     order: 3;
-    flex: 0 0 100%;
     justify-content: flex-start;
+  }
+  .chatheader .mute {
+    order: 4;
   }
 }
 
