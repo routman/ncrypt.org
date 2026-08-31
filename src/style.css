@@ -99,7 +99,8 @@ input::selection {
   font-weight: 300;
   letter-spacing: 7px;
   color: var(--color-heading);
-  margin: 16px 16px 0;
+  line-height: 1.6;
+  margin: 0 16px;
   user-select: none;
 }
 
@@ -108,8 +109,9 @@ input::selection {
 }
 
 .tagline {
-  margin: 0 16px 32px;
+  margin: 0 16px 16px;
   font-size: 14px;
+  line-height: 1.6;
   color: #999999;
 }
 
