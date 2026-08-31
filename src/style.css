@@ -437,7 +437,7 @@ button.connect:hover {
 @media (max-width: 640px) {
   .chatheader {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
     grid-template-areas:
       "logo topicwrap"
