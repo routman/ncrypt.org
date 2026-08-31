@@ -91,6 +91,67 @@ test('history: bad limit → 400', async () => {
   });
 });
 
+test('delete: valid token removes the matching row', async () => {
+  await withService({ limits: { burst: 100000 } }, async (svc, base) => {
+    const id = 'a'.repeat(64);
+    svc.storeMessage(id, 'keep', 100, 'a'.repeat(64));
+    svc.storeMessage(id, 'drop', 200, 'b'.repeat(64));
+    const res = await fetch(base + '/api/delete/' + id, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: 'b'.repeat(64) })
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.deleted, 1);
+    const hist = await (await fetch(base + '/api/history/' + id)).json();
+    assert.deepEqual(hist.messages, [{ ct: 'keep', ts: 100 }]);
+  });
+});
+
+test('delete: wrong token → 0 deleted, row remains', async () => {
+  await withService({ limits: { burst: 100000 } }, async (svc, base) => {
+    const id = 'b'.repeat(64);
+    svc.storeMessage(id, 'x', 100, 'c'.repeat(64));
+    const res = await fetch(base + '/api/delete/' + id, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: 'd'.repeat(64) })
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.deleted, 0);
+    const hist = await (await fetch(base + '/api/history/' + id)).json();
+    assert.equal(hist.messages.length, 1);
+  });
+});
+
+test('delete: bad token → 400', async () => {
+  await withService({}, async (svc, base) => {
+    const id = 'c'.repeat(64);
+    assert.equal((await fetch(base + '/api/delete/' + id, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: 'XYZ' })
+    })).status, 400);
+    assert.equal((await fetch(base + '/api/delete/' + id, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({})
+    })).status, 400);
+  });
+});
+
+test('delete: bad id → 400', async () => {
+  await withService({}, async (svc, base) => {
+    assert.equal((await fetch(base + '/api/delete/notahex', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: 'abc' })
+    })).status, 400);
+  });
+});
+
 test('admin: disallowed source IP → 403', async () => {
   await withService({ trustProxy: true }, async (svc, base) => {
     const res = await fetch(base + '/api/admin/stats', {

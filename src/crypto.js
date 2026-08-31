@@ -93,3 +93,16 @@ export async function nickSuffix(idHex, channel, nick) {
   )
   return toBase36(new Uint8Array(digest)).slice(0, 12)
 }
+
+export async function deleteToken(idHex, roomId, ts, text) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(idHex),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  const msg = new TextEncoder().encode(roomId + '\x00' + ts + '\x00' + text)
+  const sig = await crypto.subtle.sign('HMAC', key, msg)
+  return toHex(new Uint8Array(sig))
+}

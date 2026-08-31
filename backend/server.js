@@ -19,7 +19,8 @@ export function createService(options = {}) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       topic_id TEXT NOT NULL,
       ct TEXT NOT NULL,
-      ts INTEGER NOT NULL
+      ts INTEGER NOT NULL,
+      del_token TEXT NOT NULL DEFAULT ''
     );
     CREATE INDEX IF NOT EXISTS idx_messages_topic ON messages (topic_id, id);
     CREATE TABLE IF NOT EXISTS audit_log (
@@ -29,12 +30,17 @@ export function createService(options = {}) {
       detail TEXT
     );
   `);
+  const msgCols = db.prepare('PRAGMA table_info(messages)').all().map((c) => c.name);
+  if (!msgCols.includes('del_token')) {
+    db.exec(`ALTER TABLE messages ADD COLUMN del_token TEXT NOT NULL DEFAULT ''`);
+  }
 
   const limitsFile = options.limitsFile || null;
   const limits = new Limits(limitsFile ? loadLimitsConfig(limitsFile) : (options.limits || {}));
   const audit = new SqliteAudit(db);
 
-  const insertMsg = db.prepare('INSERT INTO messages (topic_id, ct, ts) VALUES (?, ?, ?)');
+  const insertMsg = db.prepare('INSERT INTO messages (topic_id, ct, ts, del_token) VALUES (?, ?, ?, ?)');
+  const deleteByToken = db.prepare('DELETE FROM messages WHERE topic_id = ? AND del_token = ?');
   const countTopic = db.prepare('SELECT COUNT(*) AS n FROM messages WHERE topic_id = ?');
   const pruneTopic = db.prepare(`
     DELETE FROM messages WHERE id IN (
@@ -67,7 +73,7 @@ export function createService(options = {}) {
     }
   }
 
-  function storeMessage(topicId, ct, ts = Date.now()) {
+  function storeMessage(topicId, ct, ts = Date.now(), token = '') {
     if (typeof topicId !== 'string' || !HEX64.test(topicId)) {
       return { stored: false, reason: 'bad-id' };
     }
@@ -81,7 +87,7 @@ export function createService(options = {}) {
       return { stored: false, reason: 'rate' };
     }
     limits.recordWrite(topicId, ts);
-    insertMsg.run(topicId, ct, ts);
+    insertMsg.run(topicId, ct, ts, token);
     const { n } = countTopic.get(topicId);
     if (n > limits.cfg.perTopic) {
       pruneTopic.run(topicId, n - limits.cfg.perTopic);
@@ -183,6 +189,26 @@ export function createService(options = {}) {
     const rows = historyStmt.all(id, limit);
     rows.reverse();
     res.json({ messages: rows.map((r) => ({ ct: r.ct, ts: r.ts })) });
+  });
+
+  app.post('/api/delete/:id', (req, res) => {
+    const id = String(req.params.id || '');
+    if (!HEX64.test(id)) {
+      return res.status(400).json({ error: 'bad id' });
+    }
+    const token = req.body && typeof req.body.token === 'string' ? req.body.token : '';
+    if (!/^[0-9a-f]{1,64}$/.test(token)) {
+      return res.status(400).json({ error: 'bad token' });
+    }
+    const now = Date.now();
+    const check = limits.checkWrite(id, now);
+    if (!check.ok) {
+      return res.status(429).json({ error: 'rate', retryAfterMs: check.retryAfterMs });
+    }
+    limits.recordWrite(id, now);
+    const info = deleteByToken.run(id, token);
+    audit.record('delete', JSON.stringify({ id, deleted: info.changes, ip: clientIp(req) }));
+    res.json({ deleted: info.changes });
   });
 
   const admin = express.Router();
@@ -307,7 +333,17 @@ export function createService(options = {}) {
       if (!m) {
         return;
       }
-      storeMessage(m[1], payload.toString('utf8'));
+      const raw = payload.toString('utf8');
+      const dot = raw.lastIndexOf('.');
+      const ct = dot === -1 ? raw : raw.slice(0, dot);
+      let token = '';
+      if (dot !== -1) {
+        const t = raw.slice(dot + 1);
+        if (/^[0-9a-f]{1,64}$/.test(t)) {
+          token = t;
+        }
+      }
+      storeMessage(m[1], ct, Date.now(), token);
     });
   }
 

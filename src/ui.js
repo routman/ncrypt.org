@@ -116,7 +116,7 @@ export function mountTopicScreen({ onJoin }) {
   topicInput.focus()
 }
 
-export function mountChatView({ nick, topic, muted: initialMuted, onHome, onToggleMute, onSend }) {
+export function mountChatView({ nick, topic, muted: initialMuted, onHome, onToggleMute, onSend, onDelete }) {
   let isMuted = initialMuted
   let onlineNicks = new Set()
   const msgDots = []
@@ -217,7 +217,23 @@ export function mountChatView({ nick, topic, muted: initialMuted, onHome, onTogg
       const t = document.createElement('span')
       t.className = 'time'
       t.textContent = fmtTime(msg.ts)
-      head.append(nickwrap, t)
+      const right = document.createElement('span')
+      right.className = 'head-right'
+      right.append(t)
+      if (own && onDelete) {
+        const del = document.createElement('button')
+        del.className = 'msg-del'
+        del.type = 'button'
+        del.title = 'delete'
+        del.textContent = '×'
+        del.addEventListener('click', () => {
+          del.disabled = true
+          del.textContent = '…'
+          onDelete(msg, m)
+        })
+        right.append(del)
+      }
+      head.append(nickwrap, right)
       const body = document.createElement('span')
       body.className = 'text'
       body.textContent = msg.text

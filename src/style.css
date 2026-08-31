@@ -388,6 +388,35 @@ button.connect:hover {
   font-size: 13px;
 }
 
+.msg .head-right {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.msg .msg-del {
+  font-family: "IBM Plex Mono", serif;
+  font-weight: 300;
+  font-size: 13px;
+  line-height: 1;
+  color: #999999;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.msg .msg-del:hover {
+  color: var(--color-accent);
+}
+
+.msg .msg-del:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .msg .text {
   display: block;
 }

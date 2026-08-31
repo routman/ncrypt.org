@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createHash, createDecipheriv } from 'node:crypto'
-import { roomTopic, roomKey, encryptMsg, decryptMsg, nickSuffix } from '../src/crypto.js'
+import { createHash, createDecipheriv, createHmac } from 'node:crypto'
+import { roomTopic, roomKey, encryptMsg, decryptMsg, nickSuffix, deleteToken } from '../src/crypto.js'
 
 const TOPIC = 'test'
 const ID = 'b965b2ee4da54939a284ea2c5764b14bc53856f245d987a0fe470cdf2a4e9a4b'
@@ -96,4 +96,32 @@ test('nickSuffix: different id → different suffix', async () => {
 
 test('nickSuffix: matches /^[0-9a-z]{12}$/', async () => {
   assert.match(await nickSuffix(ID, 'test', 'Bob'), /^[0-9a-z]{12}$/)
+})
+
+test('deleteToken: fixed (id, roomId, ts, text) → fixed 64-hex HMAC', async () => {
+  const ts = 1724000000000
+  const text = 'hello'
+  const token = await deleteToken(ID, 'roomid', ts, text)
+  assert.match(token, /^[0-9a-f]{64}$/)
+  const expected = createHmac('sha256', ID)
+    .update('roomid' + '\x00' + ts + '\x00' + text)
+    .digest('hex')
+  assert.equal(token, expected)
+})
+
+test('deleteToken: different text → different token', async () => {
+  const a = await deleteToken(ID, 'roomid', 1, 'a')
+  const b = await deleteToken(ID, 'roomid', 1, 'b')
+  assert.notEqual(a, b)
+})
+
+test('deleteToken: different id → different token', async () => {
+  const a = await deleteToken(ID, 'roomid', 1, 'x')
+  const b = await deleteToken(
+    '0000000000000000000000000000000000000000000000000000000000000001',
+    'roomid',
+    1,
+    'x'
+  )
+  assert.notEqual(a, b)
 })

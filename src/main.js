@@ -6,6 +6,7 @@ import {
   decryptMsg,
   getIdentityId,
   nickSuffix,
+  deleteToken,
 } from './crypto.js'
 import { connectMqtt, mqttUrl } from './mqtt.js'
 import { primeAudio, ding } from './sound.js'
@@ -29,6 +30,12 @@ function makeRateLimiter() {
     tokens -= 1
     return true
   }
+}
+
+function stripToken(payload) {
+  const s = String(payload)
+  const dot = s.lastIndexOf('.')
+  return dot === -1 ? s : s.slice(0, dot)
 }
 
 let client = null
@@ -130,10 +137,41 @@ function onJoin(topic, nick) {
         sent.push({ ts, text })
         if (sent.length > 50) sent.shift()
         playDing()
-        encryptMsg(key, { nick: displayNick, text, ts }).then((b64) => {
-          if (client) client.publish(mqtTopic, b64)
+        deleteToken(getIdentityId(), id, ts, text).then((token) => {
+          encryptMsg(key, { nick: displayNick, text, ts }).then((b64) => {
+            if (client) client.publish(mqtTopic, b64 + '.' + token)
+          })
         })
         return true
+      },
+      onDelete(msg, el) {
+        deleteToken(getIdentityId(), id, msg.ts, msg.text).then((token) => {
+          fetch('/api/delete/' + id, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ token }),
+          })
+            .then((res) => {
+              if (res.ok) {
+                el.remove()
+                const i = sent.findIndex((s) => s.ts === msg.ts && s.text === msg.text)
+                if (i !== -1) sent.splice(i, 1)
+              } else {
+                const btn = el.querySelector('.msg-del')
+                if (btn) {
+                  btn.disabled = false
+                  btn.textContent = '×'
+                }
+              }
+            })
+            .catch(() => {
+              const btn = el.querySelector('.msg-del')
+              if (btn) {
+                btn.disabled = false
+                btn.textContent = '×'
+              }
+            })
+        })
       },
     })
 
@@ -160,7 +198,7 @@ function onJoin(topic, nick) {
           }).catch(() => {})
           return
         }
-        decryptMsg(key, payload).then((m) => {
+        decryptMsg(key, stripToken(payload)).then((m) => {
           const i = sent.findIndex(
             (s) => s.ts === m.ts && s.text === m.text && m.nick === displayNick,
           )
