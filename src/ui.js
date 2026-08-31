@@ -1,3 +1,5 @@
+import { getIdentityId, nickSuffix } from './crypto.js'
+
 const NICK_KEY = 'ncrypt-nick'
 
 function makeLogo() {
@@ -57,18 +59,42 @@ export function mountTopicScreen({ onJoin }) {
   topicField.append(topicInput)
 
   const nickField = document.createElement('div')
-  nickField.className = 'field'
+  nickField.className = 'field nickrow'
   const nickInput = document.createElement('input')
   nickInput.autocapitalize = 'off'
   nickInput.maxLength = 20
   nickInput.placeholder = 'nickname'
   nickInput.value = localStorage.getItem(NICK_KEY) || ''
-  nickField.append(nickInput)
+  const idSpan = document.createElement('span')
+  idSpan.className = 'id'
+  idSpan.style.display = 'none'
+  nickField.append(nickInput, idSpan)
 
   const note = document.createElement('div')
   note.className = 'note'
   note.textContent =
     'your unique identifier is stored in this browser and cannot be recovered if you clear site data'
+
+  let idGen = 0
+  function updateId() {
+    const topic = topicInput.value
+    const nick = nickInput.value
+    const show = Boolean(topic && nick)
+    idSpan.style.display = show ? '' : 'none'
+    note.style.visibility = show ? 'visible' : 'hidden'
+    if (!show) {
+      idSpan.textContent = ''
+      return
+    }
+    const myGen = ++idGen
+    nickSuffix(getIdentityId(), topic, nick).then((suffix) => {
+      if (myGen !== idGen) return
+      idSpan.textContent = '-' + suffix
+    })
+  }
+  topicInput.addEventListener('input', updateId)
+  nickInput.addEventListener('input', updateId)
+  updateId()
 
   const error = document.createElement('div')
   error.className = 'error'
@@ -77,8 +103,8 @@ export function mountTopicScreen({ onJoin }) {
   join.className = 'connect'
   join.textContent = 'connect'
   join.addEventListener('click', () => {
-    const topic = topicInput.value.trim()
-    const nick = nickInput.value.trim()
+    const topic = topicInput.value
+    const nick = nickInput.value
     if (topic.length < 1 || topic.length > 100) {
       error.textContent = 'channel must be 1-100 characters'
       return
