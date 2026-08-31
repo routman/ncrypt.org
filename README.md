@@ -8,6 +8,8 @@ The channel name is the encryption secret. Entering a channel causes your browse
 
 Anyone who knows the channel name can join the room. Share the channel with the people you want in the room, and treat it like a password.
 
+The channel name is case-sensitive. There is no recovery if you forget it: ncrypt has no accounts and no password reset, and the server only stores a one-way hash of the channel, so a lost channel means permanent loss of access to that room.
+
 ## Features
 
 - **Delete your own messages** — the × on a message you sent deletes it. Only the sender can delete their own messages; the server can't.
@@ -24,6 +26,7 @@ Anyone who knows the channel name can join the room. Share the channel with the 
 ## Security
 
 - The channel is the secret. Use a long, random channel for private rooms — short channels can be guessed.
+- Channel names are case-sensitive, and a forgotten channel cannot be recovered (no account, no reset, one-way hash only).
 - Messages are encrypted with AES-256-GCM; the key is derived in your browser and never leaves your device.
 - History is capped and expires. Don't rely on ncrypt as a permanent record.
 - You are responsible for the messages you send.
