@@ -8,6 +8,12 @@ The channel name is the encryption secret. Entering a channel causes your browse
 
 Anyone who knows the channel name can join the room. Share the channel with the people you want in the room, and treat it like a password.
 
+## Features
+
+- **Delete your own messages** — the × on a message you sent deletes it. Only the sender can delete their own messages; the server can't.
+- **Mute** — the speaker button in the header toggles the new-message sound.
+- **Who's online** — a dot next to a nickname means that person is in the room right now.
+
 ## Privacy
 
 - No accounts, no passwords, no cookies, no ads, no analytics.
@@ -33,6 +39,7 @@ Anyone who knows the channel name can join the room. Share the channel with the 
 - `npm install`
 - `npm run dev` — Vite dev server
 - `npm run build` — production build to `dist/`
+- `npm test` — run the test suite (crypto vectors, service checks)
 
 ## Donations
 
