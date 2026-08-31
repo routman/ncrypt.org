@@ -74,6 +74,7 @@ export function mountTopicScreen({ onJoin }) {
   error.className = 'error'
 
   const join = document.createElement('button')
+  join.className = 'connect'
   join.textContent = 'connect'
   join.addEventListener('click', () => {
     const topic = topicInput.value.trim()
