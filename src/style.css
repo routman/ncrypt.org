@@ -292,7 +292,7 @@ button.connect:hover {
   margin: 0;
   border-radius: 4px;
   border: 1px solid var(--color-primary);
-  color: var(--color-primary);
+  color: #fff;
   background: transparent;
   cursor: pointer;
 }
@@ -307,8 +307,8 @@ button.connect:hover {
 }
 
 .chatheader .mute.muted {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-primary);
 }
 
 .msg .nickwrap {
