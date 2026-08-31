@@ -126,15 +126,18 @@ export function mountChatView({ nick, topic, muted: initialMuted, onHome, onTogg
   logo.addEventListener('click', onHome)
   const topicLabel = document.createElement('span')
   topicLabel.className = 'topic'
-  topicLabel.textContent = 'channel: ' + topic
+  topicLabel.textContent = topic
+  const dot = document.createElement('span')
+  dot.className = 'dot'
+  const topicwrap = document.createElement('span')
+  topicwrap.className = 'topicwrap'
+  topicwrap.append(topicLabel, dot)
   const nickLabel = document.createElement('span')
   nickLabel.className = 'nick'
   nickLabel.textContent = nick
-  const dot = document.createElement('span')
-  dot.className = 'dot'
   const nickwrap = document.createElement('span')
   nickwrap.className = 'nickwrap'
-  nickwrap.append(nickLabel, dot)
+  nickwrap.append(nickLabel)
   const muteBtn = document.createElement('button')
   muteBtn.className = 'mute'
   muteBtn.type = 'button'
@@ -148,7 +151,7 @@ export function mountChatView({ nick, topic, muted: initialMuted, onHome, onTogg
     muteBtn.title = isMuted ? 'unmute' : 'mute'
     muteBtn.classList.toggle('muted', isMuted)
   })
-  header.append(logo, topicLabel, nickwrap, muteBtn)
+  header.append(logo, topicwrap, nickwrap, muteBtn)
 
   const messages = document.createElement('div')
   messages.className = 'messages'

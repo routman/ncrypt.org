@@ -119,11 +119,18 @@ input::selection {
   cursor: pointer;
 }
 
-.chatheader .topic {
+.chatheader .topicwrap {
   order: 1;
   flex: 1;
   min-width: 0;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.chatheader .topic {
+  min-width: 0;
   color: #999999;
   font-size: 15px;
   overflow: hidden;
@@ -139,10 +146,10 @@ input::selection {
 }
 
 @media (max-width: 480px) {
-  .chatheader .topic {
+  .chatheader .topicwrap {
     order: 3;
     flex: 0 0 100%;
-    text-align: left;
+    justify-content: flex-start;
   }
   .chatheader .nickwrap {
     order: 1;
