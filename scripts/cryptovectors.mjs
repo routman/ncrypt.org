@@ -65,22 +65,22 @@ test('domain separation: room id is not key material', async () => {
   await assert.rejects(decryptMsg(idAsKey, b64))
 })
 
-test('nickSuffix: fixed (id, channel, nick) → fixed 12-char base36 suffix', async () => {
-  assert.equal(await nickSuffix(ID, 'test', 'Bob'), 'vzd4hhnew54i')
+test('nickSuffix: fixed (id, channel, nick) → fixed 8-char uppercase base36 suffix', async () => {
+  assert.equal(await nickSuffix(ID, 'test', 'Bob'), 'VZD4HHNE')
 })
 
 test('nickSuffix: different channel → different suffix', async () => {
   const a = await nickSuffix(ID, 'test', 'Bob')
   const b = await nickSuffix(ID, 'chan2', 'Bob')
   assert.notEqual(a, b)
-  assert.equal(b, '66cswtz89oc9')
+  assert.equal(b, '66CSWTZ8')
 })
 
 test('nickSuffix: different nick → different suffix', async () => {
   const a = await nickSuffix(ID, 'test', 'Bob')
   const b = await nickSuffix(ID, 'test', 'Ann')
   assert.notEqual(a, b)
-  assert.equal(b, '5cu3e9vceuex')
+  assert.equal(b, '5CU3E9VC')
 })
 
 test('nickSuffix: different id → different suffix', async () => {
@@ -91,11 +91,11 @@ test('nickSuffix: different id → different suffix', async () => {
     'Bob'
   )
   assert.notEqual(a, b)
-  assert.equal(b, '5q7c208p4417')
+  assert.equal(b, '5Q7C208P')
 })
 
-test('nickSuffix: matches /^[0-9a-z]{12}$/', async () => {
-  assert.match(await nickSuffix(ID, 'test', 'Bob'), /^[0-9a-z]{12}$/)
+test('nickSuffix: matches /^[0-9A-Z]{8}$/', async () => {
+  assert.match(await nickSuffix(ID, 'test', 'Bob'), /^[0-9A-Z]{8}$/)
 })
 
 test('deleteToken: fixed (id, roomId, ts, text) → fixed 64-hex HMAC', async () => {

@@ -91,7 +91,7 @@ export async function nickSuffix(idHex, channel, nick) {
     'SHA-256',
     new TextEncoder().encode(idHex + '\x00' + channel + '\x00' + nick)
   )
-  return toBase36(new Uint8Array(digest)).slice(0, 12)
+  return toBase36(new Uint8Array(digest)).slice(0, 8).toUpperCase()
 }
 
 export async function deleteToken(idHex, roomId, ts, text) {
