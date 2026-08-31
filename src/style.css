@@ -146,42 +146,6 @@ input::selection {
   gap: 6px;
 }
 
-@media (max-width: 640px) {
-  .chatheader {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    grid-template-areas:
-      "logo topicwrap"
-      "nickwrap mute";
-    align-items: center;
-    row-gap: 4px;
-    column-gap: 8px;
-  }
-  .chatheader .logo {
-    grid-area: logo;
-  }
-  .chatheader .topicwrap {
-    grid-area: topicwrap;
-    justify-content: flex-end;
-    min-width: 0;
-  }
-  .chatheader .nickwrap {
-    grid-area: nickwrap;
-    min-width: 0;
-    overflow: hidden;
-  }
-  .chatheader .nickwrap .nick {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .chatheader .mute {
-    grid-area: mute;
-    justify-self: end;
-  }
-}
-
 .field {
   position: relative;
   margin: 16px;
@@ -468,4 +432,40 @@ button.connect:hover {
 
 .screen-inner {
   margin: auto 0;
+}
+
+@media (max-width: 640px) {
+  .chatheader {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "logo topicwrap"
+      "nickwrap mute";
+    align-items: center;
+    row-gap: 4px;
+    column-gap: 8px;
+  }
+  .chatheader .logo {
+    grid-area: logo;
+  }
+  .chatheader .topicwrap {
+    grid-area: topicwrap;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+  .chatheader .nickwrap {
+    grid-area: nickwrap;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .chatheader .nickwrap .nick {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .chatheader .mute {
+    grid-area: mute;
+    justify-self: end;
+  }
 }
