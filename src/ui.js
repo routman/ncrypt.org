@@ -68,7 +68,7 @@ export function mountTopicScreen({ onJoin }) {
   const note = document.createElement('div')
   note.className = 'note'
   note.textContent =
-    'your identifier is stored in this browser; clearing its data changes it (no recovery)'
+    'your unique identifier is stored in this browser and cannot be recovered if you clear site data'
 
   const error = document.createElement('div')
   error.className = 'error'
