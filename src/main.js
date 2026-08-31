@@ -51,7 +51,17 @@ function home() {
     client.close()
     client = null
   }
-  mountTopicScreen({ onJoin })
+  mountTopicScreen({ onJoin: joinRoom })
+}
+
+function joinRoom(topic, nick) {
+  history.pushState({ room: { topic, nick } }, '', '/chat')
+  onJoin(topic, nick)
+}
+
+function goHome() {
+  history.pushState({ room: null }, '', '/')
+  home()
 }
 
 function onJoin(topic, nick) {
@@ -109,7 +119,7 @@ function onJoin(topic, nick) {
       nick: displayNick,
       topic,
       muted,
-      onHome: home,
+      onHome: goHome,
       onToggleMute: toggleMute,
       onSend(text) {
         if (!key) return false
@@ -174,4 +184,13 @@ function onJoin(topic, nick) {
   })
 }
 
-mountTopicScreen({ onJoin })
+window.addEventListener('popstate', (e) => {
+  const room = e.state && e.state.room
+  if (room) onJoin(room.topic, room.nick)
+  else home()
+})
+
+if (location.pathname !== '/') {
+  history.replaceState({ room: null }, '', '/')
+}
+mountTopicScreen({ onJoin: joinRoom })
