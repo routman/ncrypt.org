@@ -151,8 +151,9 @@ function onJoin(topic, nick) {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ token }),
           })
-            .then((res) => {
-              if (res.ok) {
+            .then((res) => res.json().catch(() => ({})).then((body) => ({ ok: res.ok, body })))
+            .then(({ ok, body }) => {
+              if (ok && body && body.deleted > 0) {
                 el.remove()
                 const i = sent.findIndex((s) => s.ts === msg.ts && s.text === msg.text)
                 if (i !== -1) sent.splice(i, 1)
