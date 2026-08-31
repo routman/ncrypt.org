@@ -25,6 +25,9 @@ function nickColor(nick) {
   return 'hsl(' + ((h >>> 0) % 360) + ' 85% 65%)'
 }
 
+const SOUND_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>'
+const MUTE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>'
+
 export function mountTopicScreen({ onJoin }) {
   const app = document.getElementById('app')
   app.textContent = ''
@@ -135,13 +138,13 @@ export function mountChatView({ nick, topic, muted: initialMuted, onHome, onTogg
   const muteBtn = document.createElement('button')
   muteBtn.className = 'mute'
   muteBtn.type = 'button'
-  muteBtn.textContent = isMuted ? 'muted' : 'sound'
+  muteBtn.innerHTML = isMuted ? MUTE_ICON : SOUND_ICON
   muteBtn.title = isMuted ? 'unmute' : 'mute'
   muteBtn.classList.toggle('muted', isMuted)
   muteBtn.addEventListener('click', () => {
     isMuted = !isMuted
     onToggleMute(isMuted)
-    muteBtn.textContent = isMuted ? 'muted' : 'sound'
+    muteBtn.innerHTML = isMuted ? MUTE_ICON : SOUND_ICON
     muteBtn.title = isMuted ? 'unmute' : 'mute'
     muteBtn.classList.toggle('muted', isMuted)
   })

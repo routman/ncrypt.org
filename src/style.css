@@ -276,15 +276,20 @@ button:hover {
 
 .chatheader .mute {
   order: 3;
-  font-size: 13px;
-  font-weight: 300;
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
   margin: 0;
   border-radius: 4px;
   border: 1px solid var(--color-primary);
   color: var(--color-primary);
   background: transparent;
   cursor: pointer;
+}
+
+.chatheader .mute svg {
+  display: block;
 }
 
 .chatheader .mute:hover {
