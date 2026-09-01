@@ -244,6 +244,29 @@ test('blockedIps: unblocked source ip → 200 on /api/history', async () => {
   });
 });
 
+test('blockedIps: spoofed leftmost XFF hop cannot bypass the block', async () => {
+  // Caddy appends the real (blocked) client IP to the END of the XFF chain.
+  // An attacker's spoofed leftmost hop must not be trusted.
+  await withService({ trustProxy: true, limits: { blockedIps: ['8.8.8.8'] } }, async (svc, base) => {
+    const res = await fetch(base + '/api/history/' + 'a'.repeat(64), {
+      headers: { 'x-forwarded-for': '1.1.1.1, 8.8.8.8' }
+    });
+    assert.equal(res.status, 403);
+    const body = await res.json();
+    assert.equal(body.error, 'blocked');
+  });
+});
+
+test('clientIp: rightmost XFF hop is the trusted client address', async () => {
+  await withService({ trustProxy: true, limits: { blockedIps: ['8.8.8.8'] } }, async (svc, base) => {
+    // Real client 9.9.9.9 (unblocked) behind a spoofed leftmost hop → allowed.
+    const res = await fetch(base + '/api/history/' + 'a'.repeat(64), {
+      headers: { 'x-forwarded-for': '8.8.8.8, 9.9.9.9' }
+    });
+    assert.equal(res.status, 200);
+  });
+});
+
 test('admin: block-ip adds to blockedIps', async () => {
   await withService({ trustProxy: true }, async (svc, base) => {
     const headers = { ...ADMIN, 'x-forwarded-for': '127.0.0.1' };

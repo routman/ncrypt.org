@@ -163,6 +163,12 @@ function extractPackets(buf) {
 
 // --- Per-connection state ---
 
+// Cap on the reassembled per-connection MQTT buffer. A single WebSocket frame
+// is already bounded by the ws maxPayload below, but an MQTT packet may span
+// many frames, so the accumulated buffer is capped independently to stop a
+// client from exhausting memory with a large/incomplete packet.
+const MAX_BUF = 1024 * 1024; // 1 MiB
+
 const connections = new Map();
 let connectionSeq = 0;
 
@@ -175,44 +181,60 @@ function releaseConnection(id) {
 
 function handleClientToBroker(ws, brokerWs, state, data) {
   state.buf = Buffer.concat([state.buf, Buffer.isBuffer(data) ? data : Buffer.from(data)]);
+  if (state.buf.length > MAX_BUF) {
+    // Reassembled packet exceeds the cap: drop the connection rather than
+    // keep accumulating an unbounded buffer.
+    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+      ws.close(1009, 'payload too large');
+    }
+    state.buf = Buffer.alloc(0);
+    return;
+  }
   const { packets, rest } = extractPackets(state.buf);
   state.buf = rest;
   for (const pkt of packets) {
-    if (pkt.type === 1) {
-      const { clientId } = parseConnect(pkt.raw);
-      state.clientId = clientId;
-    }
-    if (pkt.type === 8) {
-      const { topics } = parseSubscribe(pkt.raw);
-      let allowed = true;
-      for (const topic of topics) {
-        stats.subscribes.total++;
-        const res = policy.checkSubscribe(state.clientId || 'unknown', topic);
+    let forward = true;
+    try {
+      if (pkt.type === 1) {
+        const { clientId } = parseConnect(pkt.raw);
+        state.clientId = clientId;
+      }
+      if (pkt.type === 8) {
+        const { topics } = parseSubscribe(pkt.raw);
+        let allowed = true;
+        for (const topic of topics) {
+          stats.subscribes.total++;
+          const res = policy.checkSubscribe(state.clientId || 'unknown', topic);
+          if (!res.ok) {
+            allowed = false;
+            state.dropped[res.reason] = (state.dropped[res.reason] || 0) + 1;
+            stats.subscribes.dropped[res.reason] = (stats.subscribes.dropped[res.reason] || 0) + 1;
+            bump(stats.byClientId, state.clientId || 'unknown', { drops: 1 });
+            break;
+          }
+        }
+        if (!allowed) forward = false;
+      }
+      if (pkt.type === 3) {
+        const { topic } = parsePublish(pkt.raw);
+        const cid = state.clientId || 'unknown';
+        stats.publishes.total++;
+        bump(stats.byClientId, cid, { publishes: 1 });
+        bump(stats.byIp, state.ip, { publishes: 1 });
+        const res = policy.checkPublish(cid);
         if (!res.ok) {
-          allowed = false;
           state.dropped[res.reason] = (state.dropped[res.reason] || 0) + 1;
-          stats.subscribes.dropped[res.reason] = (stats.subscribes.dropped[res.reason] || 0) + 1;
-          bump(stats.byClientId, state.clientId || 'unknown', { drops: 1 });
-          break;
+          stats.publishes.dropped[res.reason] = (stats.publishes.dropped[res.reason] || 0) + 1;
+          bump(stats.byClientId, cid, { drops: 1 });
+          forward = false;
         }
       }
-      if (!allowed) continue;
+    } catch (err) {
+      // Malformed packet: drop it (do not forward to the broker) instead of
+      // crashing the whole gateway.
+      forward = false;
     }
-    if (pkt.type === 3) {
-      const { topic } = parsePublish(pkt.raw);
-      const cid = state.clientId || 'unknown';
-      stats.publishes.total++;
-      bump(stats.byClientId, cid, { publishes: 1 });
-      bump(stats.byIp, state.ip, { publishes: 1 });
-      const res = policy.checkPublish(cid);
-      if (!res.ok) {
-        state.dropped[res.reason] = (state.dropped[res.reason] || 0) + 1;
-        stats.publishes.dropped[res.reason] = (stats.publishes.dropped[res.reason] || 0) + 1;
-        bump(stats.byClientId, cid, { drops: 1 });
-        continue;
-      }
-    }
-    if (brokerWs.readyState === WebSocket.OPEN) {
+    if (forward && brokerWs.readyState === WebSocket.OPEN) {
       brokerWs.send(pkt.raw);
     }
   }
@@ -242,7 +264,7 @@ const server = createServer((req, res) => {
   res.end('not found');
 });
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: MAX_BUF });
 
 wss.on('connection', (clientWs, req) => {
   const id = ++connectionSeq;

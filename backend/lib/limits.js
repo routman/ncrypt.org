@@ -122,16 +122,23 @@ export function watchLimitsFile(file, limits, { intervalMs = 5000, log = console
 
 export function clientIp(req) {
   const xf = req.headers['x-forwarded-for'];
-  let first = null;
+  let raw = null;
   if (typeof xf === 'string' && xf.length > 0) {
-    first = xf;
+    raw = xf;
   } else if (Array.isArray(xf) && xf.length > 0) {
-    first = String(xf[0]);
+    raw = xf.join(',');
   }
-  if (first !== null) {
-    const ip = first.split(',')[0].trim();
-    if (ip.length > 0) {
-      return ip;
+  if (raw !== null) {
+    // Caddy (the only front proxy) appends the real client IP to the END of
+    // the XFF chain, so the rightmost entry is the trusted client address.
+    // Leftmost entries are client-controlled and must not be trusted, or a
+    // client could spoof its way past the blockedIps list.
+    const hops = raw.split(',');
+    for (let i = hops.length - 1; i >= 0; i--) {
+      const ip = hops[i].trim();
+      if (ip.length > 0) {
+        return ip;
+      }
     }
   }
   return (req.socket && req.socket.remoteAddress) || 'unknown';
