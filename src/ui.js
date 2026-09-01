@@ -146,7 +146,12 @@ export function mountTopicScreen({ onJoin }) {
   const priv = document.createElement('a')
   priv.href = '/privacy.html'
   priv.textContent = 'privacy'
-  links.append(about, document.createTextNode(' · '), terms, document.createTextNode(' · '), priv)
+  const publicnote = document.createElement('a')
+  publicnote.href = 'https://publicnote.com'
+  publicnote.target = '_blank'
+  publicnote.rel = 'noopener'
+  publicnote.textContent = 'publicnote'
+  links.append(about, document.createTextNode(' · '), terms, document.createTextNode(' · '), priv, document.createTextNode(' · '), publicnote)
 
   const inner = document.createElement('div')
   inner.className = 'screen-inner'
