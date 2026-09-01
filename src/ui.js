@@ -47,7 +47,21 @@ export function mountTopicScreen({ onJoin }) {
 
   const tagline = document.createElement('div')
   tagline.className = 'tagline'
-  tagline.textContent = 'encrypted chat rooms'
+  tagline.textContent = 'ephemeral chat'
+
+  const facts = document.createElement('div')
+  facts.className = 'facts'
+  for (const line of [
+    'end-to-end encrypted',
+    'messages deleted after 30 days',
+    'only last 100 messages kept',
+    'no account no ads no tracking',
+  ]) {
+    const fact = document.createElement('div')
+    fact.className = 'fact'
+    fact.textContent = line
+    facts.append(fact)
+  }
 
   const topicField = document.createElement('div')
   topicField.className = 'field'
@@ -136,7 +150,7 @@ export function mountTopicScreen({ onJoin }) {
 
   const inner = document.createElement('div')
   inner.className = 'screen-inner'
-  inner.append(logo, tagline, topicField, nickField, note, error, join, links)
+  inner.append(logo, tagline, topicField, nickField, note, join, error, facts, links)
   screen.append(inner)
   app.append(screen)
   topicInput.focus()
