@@ -116,7 +116,7 @@ input::selection {
 }
 
 .facts {
-  margin: 0 16px 16px;
+  margin: 16px;
   font-size: 15px;
   line-height: 2;
   color: #999999;
@@ -225,7 +225,7 @@ button {
   border: 1px solid transparent;
   border-radius: 4px;
   padding: 8px 24px;
-  margin: 8px 16px 16px 16px;
+  margin: 16px;
   cursor: pointer;
 }
 
@@ -250,13 +250,12 @@ button.connect:hover {
 .error {
   color: #ef3939;
   margin: 8px 16px;
-  min-height: 17px;
 }
 
 .note {
   color: #777777;
   font-size: 13px;
-  margin: 16px;
+  margin: 0 16px;
 }
 
 .chat {
@@ -499,8 +498,8 @@ button.connect:hover {
 }
 
 .links {
-  margin: 32px 16px 64px;
-  font-size: 17px;
+  margin: 24px 16px 64px;
+  font-size: 15px;
 }
 
 .links a {

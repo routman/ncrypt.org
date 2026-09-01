@@ -53,8 +53,8 @@ export function mountTopicScreen({ onJoin }) {
   facts.className = 'facts'
   for (const line of [
     'end-to-end encrypted',
-    'messages deleted after 30 days',
     'only last 100 messages kept',
+    'messages deleted after 30 days',
     'no account no ads no tracking',
   ]) {
     const fact = document.createElement('div')
@@ -84,10 +84,10 @@ export function mountTopicScreen({ onJoin }) {
   idSpan.style.display = 'none'
   nickField.append(nickInput, idSpan)
 
-  const note = document.createElement('div')
-  note.className = 'note'
-  note.textContent =
-    'your unique identifier is stored in this browser and cannot be recovered if you clear site data'
+  // const note = document.createElement('div')
+  // note.className = 'note'
+  // note.textContent =
+  //   'your unique identifier is stored in this browser and cannot be recovered if you clear site data'
 
   let idGen = 0
   function updateId() {
@@ -95,7 +95,7 @@ export function mountTopicScreen({ onJoin }) {
     const nick = nickInput.value
     const show = Boolean(topic && nick)
     idSpan.style.display = show ? '' : 'none'
-    note.style.visibility = show ? 'visible' : 'hidden'
+    // note.style.visibility = show ? 'visible' : 'hidden'
     if (!show) {
       idSpan.textContent = ''
       return
@@ -150,7 +150,7 @@ export function mountTopicScreen({ onJoin }) {
 
   const inner = document.createElement('div')
   inner.className = 'screen-inner'
-  inner.append(logo, tagline, topicField, nickField, note, join, error, facts, links)
+  inner.append(logo, tagline, topicField, nickField, join, error, facts, links)
   screen.append(inner)
   app.append(screen)
   topicInput.focus()
