@@ -550,3 +550,24 @@ button.connect:hover {
     justify-self: end;
   }
 }
+
+.cat-fall {
+  position: fixed;
+  top: -60px;
+  z-index: 9999;
+  pointer-events: none;
+  user-select: none;
+  animation: cat-fall linear forwards;
+  will-change: transform;
+}
+
+@keyframes cat-fall {
+  from {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0.85;
+  }
+}
