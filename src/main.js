@@ -10,6 +10,7 @@ import {
 } from './crypto.js'
 import { connectMqtt, mqttUrl } from './mqtt.js'
 import { primeAudio, ding } from './sound.js'
+import { isMeow, catRain } from './easter.js'
 
 const RATE_MS = 2000
 const BURST = 5
@@ -137,6 +138,7 @@ function onJoin(topic, nick) {
         sent.push({ ts, text })
         if (sent.length > 50) sent.shift()
         playDing()
+        if (isMeow(text)) catRain()
         deleteToken(getIdentityId(), id, ts, text).then((token) => {
           encryptMsg(key, { nick: displayNick, text, ts }).then((b64) => {
             if (client) client.publish(mqtTopic, b64 + '.' + token)
@@ -209,6 +211,7 @@ function onJoin(topic, nick) {
           }
           chat.append(m)
           playDing()
+          if (isMeow(m.text)) catRain()
         }).catch(() => {})
       },
       onStatus(connected) {
