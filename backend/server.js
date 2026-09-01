@@ -7,6 +7,10 @@ import { isAllowedAdminIp, adminSourceIp, rewriteLimitsFile, SqliteAudit } from 
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const STAMP_CAP = 10000;
+// Cap on the stored ciphertext (base64 string). A legitimate message is a
+// 500-char payload → well under 1 KB of base64, so 4 KB is generous. This
+// stops an attacker from inflating the DB with arbitrarily large rows.
+const MAX_CT_LEN = 4096;
 
 export function createService(options = {}) {
   const dbPath = options.dbPath || ':memory:';
@@ -79,6 +83,9 @@ export function createService(options = {}) {
     }
     if (typeof ct !== 'string' || ct.length === 0) {
       return { stored: false, reason: 'bad-ct' };
+    }
+    if (ct.length > MAX_CT_LEN) {
+      return { stored: false, reason: 'ct-too-large' };
     }
     const check = limits.checkWrite(topicId, ts);
     if (!check.ok) {
@@ -171,6 +178,11 @@ export function createService(options = {}) {
     if (limits.cfg.blockedIps.includes(ip)) {
       return res.status(403).json({ error: 'blocked' });
     }
+    const ipCheck = limits.checkIp(ip, Date.now());
+    if (!ipCheck.ok) {
+      return res.status(429).json({ error: 'rate', retryAfterMs: ipCheck.retryAfterMs });
+    }
+    limits.recordIp(ip, Date.now());
     next();
   });
 

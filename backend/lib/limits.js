@@ -7,8 +7,18 @@ export const LIMITS_DEFAULTS = {
   globalRows: 50000,
   ttlDays: 30,
   blockedClients: [],
-  blockedIps: []
+  blockedIps: [],
+  // Per-IP request rate limit for the /api surface (all HTTP requests, not
+  // just writes). A normal visitor makes a handful of requests per room, so
+  // 50 per 10 s is generous; it stops a single IP from hammering the API.
+  ipRateMs: 10000,
+  ipBurst: 50
 };
+
+// Cap on the number of distinct IPs tracked for the per-IP rate limit. A
+// botnet of unique IPs must not be able to exhaust memory; once the cap is
+// reached, new IPs are no longer tracked (they are allowed through).
+const MAX_TRACKED_IPS = 500;
 
 export function deepMerge(base, extra) {
   const out = {};
@@ -46,10 +56,40 @@ export class Limits {
   constructor(cfg = {}) {
     this.cfg = deepMerge(LIMITS_DEFAULTS, cfg);
     this.byTopic = new Map();
+    this.byIp = new Map();
   }
 
   setConfig(cfg) {
     this.cfg = deepMerge(LIMITS_DEFAULTS, cfg);
+  }
+
+  checkIp(ip, now = Date.now()) {
+    const stamps = this.byIp.get(ip);
+    if (stamps === undefined || stamps.length === 0) {
+      return { ok: true };
+    }
+    const cutoff = now - this.cfg.ipRateMs;
+    while (stamps.length > 0 && stamps[0] < cutoff) {
+      stamps.shift();
+    }
+    if (stamps.length >= this.cfg.ipBurst) {
+      const retryAfterMs = Math.max(1000, stamps[0] + this.cfg.ipRateMs - now);
+      return { ok: false, reason: 'ip-rate', retryAfterMs };
+    }
+    return { ok: true };
+  }
+
+  recordIp(ip, now = Date.now()) {
+    let stamps = this.byIp.get(ip);
+    if (stamps === undefined) {
+      // Cap the tracked-IP map so a flood of unique IPs can't exhaust memory.
+      if (this.byIp.size >= MAX_TRACKED_IPS) {
+        return;
+      }
+      stamps = [];
+      this.byIp.set(ip, stamps);
+    }
+    stamps.push(now);
   }
 
   checkWrite(topicId, now = Date.now()) {
@@ -81,6 +121,11 @@ export class Limits {
     for (const [topicId, stamps] of this.byTopic) {
       if (stamps.length === 0 || now - stamps[stamps.length - 1] > this.cfg.rateMs) {
         this.byTopic.delete(topicId);
+      }
+    }
+    for (const [ip, stamps] of this.byIp) {
+      if (stamps.length === 0 || now - stamps[stamps.length - 1] > this.cfg.ipRateMs) {
+        this.byIp.delete(ip);
       }
     }
   }

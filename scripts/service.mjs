@@ -297,6 +297,33 @@ test('admin: unblock-ip removes from blockedIps', async () => {
   });
 });
 
+test('storeMessage: oversized ciphertext is rejected', async () => {
+  await withService({ limits: { burst: 100000 } }, async (svc, base) => {
+    const id = 'a'.repeat(64);
+    const ok = svc.storeMessage(id, 'x'.repeat(100), 100);
+    assert.equal(ok.stored, true);
+    const tooLarge = svc.storeMessage(id, 'x'.repeat(5000), 200);
+    assert.equal(tooLarge.stored, false);
+    assert.equal(tooLarge.reason, 'ct-too-large');
+    // The oversized row was not stored.
+    const hist = await (await fetch(base + '/api/history/' + id)).json();
+    assert.equal(hist.messages.length, 1);
+  });
+});
+
+test('per-IP rate limit: 429 after exceeding ipBurst', async () => {
+  await withService({ limits: { ipBurst: 3, ipRateMs: 10000 } }, async (svc, base) => {
+    const id = 'a'.repeat(64);
+    const results = [];
+    for (let i = 0; i < 5; i++) {
+      const res = await fetch(base + '/api/history/' + id);
+      results.push(res.status);
+    }
+    // First ipBurst requests allowed, the rest rate-limited.
+    assert.deepEqual(results, [200, 200, 200, 429, 429]);
+  });
+});
+
 test('global cap: sweep prunes oldest rows down to globalRows', async () => {
   await withService({ limits: { perTopic: 100000, globalRows: 10, ttlDays: 30, burst: 100000 } }, async (svc) => {
     const idA = 'a'.repeat(64);
