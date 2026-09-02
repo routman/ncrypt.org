@@ -11,6 +11,7 @@ import {
 import { connectMqtt, mqttUrl } from './mqtt.js'
 import { primeAudio, ding } from './sound.js'
 import { isMeow, catRain } from './easter.js'
+import { sanitizeSlur } from './sanitize.js'
 
 const RATE_MS = 2000
 const BURST = 5
@@ -134,6 +135,7 @@ function onJoin(topic, nick) {
       onToggleMute: toggleMute,
       onSend(text) {
         if (!key) return false
+        text = sanitizeSlur(text)
         if (text.length > MAX_LEN) return false
         if (!canSend()) return false
         if (text === lastText) runLen++
