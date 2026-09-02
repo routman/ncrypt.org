@@ -55,7 +55,7 @@ export function mountTopicScreen({ onJoin }) {
     'end-to-end encrypted',
     'only last 100 messages kept',
     'messages deleted after 30 days',
-    'no account no ads no tracking',
+    'no accounts no ads no tracking',
   ]) {
     const fact = document.createElement('div')
     fact.className = 'fact'
