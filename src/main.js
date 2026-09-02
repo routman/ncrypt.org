@@ -15,6 +15,7 @@ import { isMeow, catRain } from './easter.js'
 const RATE_MS = 2000
 const BURST = 5
 const MAX_LEN = 500
+const MAX_REPEAT = 3
 const MUTE_KEY = 'ncrypt-mute'
 const PRESENCE_INTERVAL = 20000
 const PRESENCE_TIMEOUT = 60000
@@ -82,6 +83,8 @@ function onJoin(topic, nick) {
   let displayNick = nick
   const sent = []
   const presence = new Map()
+  let lastText = null
+  let runLen = 0
 
   function playDing() {
     if (!muted) ding()
@@ -133,17 +136,25 @@ function onJoin(topic, nick) {
         if (!key) return false
         if (text.length > MAX_LEN) return false
         if (!canSend()) return false
+        if (text === lastText) runLen++
+        else {
+          lastText = text
+          runLen = 1
+        }
+        const phantom = runLen > MAX_REPEAT
         const ts = Date.now()
         chat.append({ nick: displayNick, text, ts })
-        sent.push({ ts, text })
-        if (sent.length > 50) sent.shift()
         playDing()
         if (isMeow(text)) catRain()
-        deleteToken(getIdentityId(), id, ts, text).then((token) => {
-          encryptMsg(key, { nick: displayNick, text, ts }).then((b64) => {
-            if (client) client.publish(mqtTopic, b64 + '.' + token)
+        if (!phantom) {
+          sent.push({ ts, text })
+          if (sent.length > 50) sent.shift()
+          deleteToken(getIdentityId(), id, ts, text).then((token) => {
+            encryptMsg(key, { nick: displayNick, text, ts }).then((b64) => {
+              if (client) client.publish(mqtTopic, b64 + '.' + token)
+            })
           })
-        })
+        }
         return true
       },
       onDelete(msg, el) {
