@@ -94,6 +94,10 @@ function onJoin(topic, nick) {
   function toggleMute(next) {
     muted = next
     localStorage.setItem(MUTE_KEY, next ? '1' : '0')
+    if (!next) {
+      primeAudio()
+      ding()
+    }
   }
 
   function publishPresence() {
