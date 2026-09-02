@@ -10,7 +10,7 @@ import {
 } from './crypto.js'
 import { connectMqtt, mqttUrl } from './mqtt.js'
 import { primeAudio, ding } from './sound.js'
-import { isMeow, catRain } from './easter.js'
+import { animalRain } from './easter.js'
 import { sanitizeSlur } from './sanitize.js'
 
 const RATE_MS = 2000
@@ -151,7 +151,7 @@ function onJoin(topic, nick) {
         const ts = Date.now()
         chat.append({ nick: displayNick, text, ts })
         playDing()
-        if (isMeow(text)) catRain()
+        animalRain(text)
         if (!phantom) {
           sent.push({ ts, text })
           if (sent.length > 50) sent.shift()
@@ -228,7 +228,7 @@ function onJoin(topic, nick) {
           }
           chat.append(m)
           playDing()
-          if (isMeow(m.text)) catRain()
+          animalRain(m.text)
         }).catch(() => {})
       },
       onStatus(connected) {

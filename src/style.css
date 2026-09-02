@@ -551,17 +551,17 @@ button.connect:hover {
   }
 }
 
-.cat-fall {
+.animal-fall {
   position: fixed;
   top: -60px;
   z-index: 9999;
   pointer-events: none;
   user-select: none;
-  animation: cat-fall linear forwards;
+  animation: animal-fall linear forwards;
   will-change: transform;
 }
 
-@keyframes cat-fall {
+@keyframes animal-fall {
   from {
     transform: translateY(0) rotate(0deg);
     opacity: 1;
