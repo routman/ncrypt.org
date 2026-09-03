@@ -134,6 +134,9 @@ export function mountTopicScreen({ onJoin }) {
   topicInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') join.click()
   })
+  nickInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') join.click()
+  })
 
   const links = document.createElement('p')
   links.className = 'links'
